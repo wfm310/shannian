@@ -72,7 +72,7 @@ function getSharedKeywords(a: Set<string>, b: Set<string>): string[] {
 }
 
 function generateGraphData(thoughts: FlashThought[]) {
-  const bigramMap = new Map<number, Set<string>>()
+  const bigramMap = new Map<string, Set<string>>()
   thoughts.forEach(t => {
     bigramMap.set(t.id!, extractBigrams(t.content))
   })

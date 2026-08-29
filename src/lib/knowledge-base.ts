@@ -3,6 +3,7 @@
 // 负责数据同步、节点/笔记的 CRUD、双向链接计算、标签系统和搜索
 
 import { db } from "@/lib/db"
+import { newId, newSyncFields } from "@/lib/id"
 import type {
   KnowledgeNode, KnowledgeEdge, KnowledgeNote,
   KnowledgeNodeType, KnowledgeEdgeType,
@@ -41,7 +42,7 @@ export const EDGE_TYPE_META: Record<
 
 // ========== 辅助函数 ==========
 // 生成节点唯一标识 key（模块 + 记录ID）
-function makeKey(module: string, recordId: number): string {
+function makeKey(module: string, recordId: string): string {
   return `${module}:${recordId}`
 }
 
@@ -94,6 +95,7 @@ export async function syncFromModules(): Promise<{
       links: [],
       linkedBy: [],
       createdAt: f.createdAt,
+      ...newSyncFields(),
       updatedAt: f.createdAt,
     }
     nodes.push(node)
@@ -115,6 +117,7 @@ export async function syncFromModules(): Promise<{
       links: [],
       linkedBy: [],
       createdAt: b.createdAt,
+      ...newSyncFields(),
       updatedAt: b.createdAt,
     }
     nodes.push(node)
@@ -136,6 +139,7 @@ export async function syncFromModules(): Promise<{
       links: [],
       linkedBy: [],
       createdAt: t.createdAt,
+      ...newSyncFields(),
       updatedAt: t.updatedAt,
     }
     nodes.push(node)
@@ -157,6 +161,7 @@ export async function syncFromModules(): Promise<{
       links: [],
       linkedBy: [],
       createdAt: q.createdAt,
+      ...newSyncFields(),
       updatedAt: q.createdAt,
     }
     nodes.push(node)
@@ -178,6 +183,7 @@ export async function syncFromModules(): Promise<{
       links: [],
       linkedBy: [],
       createdAt: i.createdAt,
+      ...newSyncFields(),
       updatedAt: i.updatedAt,
     }
     nodes.push(node)
@@ -199,6 +205,7 @@ export async function syncFromModules(): Promise<{
       links: [],
       linkedBy: [],
       createdAt: s.createdAt,
+      ...newSyncFields(),
       updatedAt: s.updatedAt,
     }
     nodes.push(node)
@@ -221,6 +228,7 @@ export async function syncFromModules(): Promise<{
       links: [],
       linkedBy: [],
       createdAt: p.createdAt,
+      ...newSyncFields(),
       updatedAt: p.createdAt,
     }
     nodes.push(node)
@@ -242,6 +250,7 @@ export async function syncFromModules(): Promise<{
       links: [],
       linkedBy: [],
       createdAt: pub.createdAt,
+      ...newSyncFields(),
       updatedAt: pub.updatedAt,
     }
     nodes.push(node)
@@ -263,6 +272,7 @@ export async function syncFromModules(): Promise<{
       links: [],
       linkedBy: [],
       createdAt: r.createdAt,
+      ...newSyncFields(),
       updatedAt: r.updatedAt,
     }
     nodes.push(node)
@@ -312,6 +322,7 @@ export async function syncFromModules(): Promise<{
         edgeType: "DERIVED_FROM",
         weight: 1,
         createdAt: t.createdAt,
+        ...newSyncFields(),
       })
     }
   }
@@ -330,6 +341,7 @@ export async function syncFromModules(): Promise<{
         edgeType: "PRODUCED_AS",
         weight: 1,
         createdAt: p.createdAt,
+        ...newSyncFields(),
       })
     }
   }
@@ -348,6 +360,7 @@ export async function syncFromModules(): Promise<{
         edgeType: "APPLIES",
         weight: 1,
         createdAt: p.createdAt,
+        ...newSyncFields(),
       })
     }
   }
@@ -366,6 +379,7 @@ export async function syncFromModules(): Promise<{
         edgeType: "PUBLISHED_AS",
         weight: 1,
         createdAt: pub.createdAt,
+        ...newSyncFields(),
       })
     }
   }
@@ -384,6 +398,7 @@ export async function syncFromModules(): Promise<{
         edgeType: "REVIEWED_FROM",
         weight: 1,
         createdAt: r.createdAt,
+        ...newSyncFields(),
       })
     }
   }
@@ -410,6 +425,7 @@ export async function syncFromModules(): Promise<{
           edgeType: "SHARED_TAG",
           weight: 0.5,
           createdAt: Math.max(a.createdAt, b.createdAt),
+          ...newSyncFields(),
         })
       }
     }
@@ -438,6 +454,7 @@ export async function syncFromModules(): Promise<{
           edgeType: "DERIVED_FROM",
           weight: 0.3,
           createdAt: b.createdAt,
+          ...newSyncFields(),
         })
       }
     }
@@ -462,7 +479,7 @@ export async function recalculateBacklinks(): Promise<void> {
   const allNotes = await db.knowledgeNotes.toArray()
 
   // 为每个节点初始化 linkedBy
-  const backlinkMap = new Map<number, number[]>()
+  const backlinkMap = new Map<string, string[]>()
 
   for (const node of allNodes) {
     if (!node.id || !node.links) continue
@@ -498,13 +515,13 @@ export async function getNodes(): Promise<KnowledgeNode[]> {
   return db.knowledgeNodes.orderBy("createdAt").reverse().toArray()
 }
 
-export async function getNode(id: number): Promise<KnowledgeNode | undefined> {
+export async function getNode(id: string): Promise<KnowledgeNode | undefined> {
   return db.knowledgeNodes.get(id)
 }
 
 export async function updateNodeLinks(
-  nodeId: number,
-  links: number[]
+  nodeId: string,
+  links: string[]
 ): Promise<void> {
   await db.knowledgeNodes.update(nodeId, { links, updatedAt: Date.now() })
   await recalculateBacklinks()
@@ -516,16 +533,18 @@ export async function getNotes(): Promise<KnowledgeNote[]> {
   return db.knowledgeNotes.orderBy("createdAt").reverse().toArray()
 }
 
-export async function getNote(id: number): Promise<KnowledgeNote | undefined> {
+export async function getNote(id: string): Promise<KnowledgeNote | undefined> {
   return db.knowledgeNotes.get(id)
 }
 
 export async function createNote(
   note: Omit<KnowledgeNote, "id" | "createdAt" | "updatedAt">
-): Promise<number> {
+): Promise<string> {
   const now = Date.now()
-  const id = await db.knowledgeNotes.add({
+  const id = newId()
+  await db.knowledgeNotes.add({
     ...note,
+    id,
     createdAt: now,
     updatedAt: now,
   } as KnowledgeNote)
@@ -534,7 +553,7 @@ export async function createNote(
 }
 
 export async function updateNote(
-  id: number,
+  id: string,
   updates: Partial<KnowledgeNote>
 ): Promise<void> {
   await db.knowledgeNotes.update(id, { ...updates, updatedAt: Date.now() })
@@ -596,8 +615,8 @@ export async function searchKnowledge(
 // ========== 图谱数据 ==========
 
 export interface GraphData {
-  nodes: { id: number; label: string; type: KnowledgeNodeType; tags: string[] }[]
-  edges: { source: number; target: number; type: KnowledgeEdgeType }[]
+  nodes: { id: string; label: string; type: KnowledgeNodeType; tags: string[] }[]
+  edges: { source: string; target: string; type: KnowledgeEdgeType }[]
 }
 
 export async function getGraphData(): Promise<GraphData> {
@@ -636,7 +655,7 @@ export function parseMarkdownLinks(content: string): string[] {
 
 // ========== 根据标题查找节点ID ==========
 
-export async function findNodeIdByTitle(title: string): Promise<number | null> {
+export async function findNodeIdByTitle(title: string): Promise<string | null> {
   const node = await db.knowledgeNodes
     .where("title")
     .equalsIgnoreCase(title)

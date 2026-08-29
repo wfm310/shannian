@@ -133,9 +133,7 @@ function TodoPage() {
     const idStr = searchParams.get("id")
     if (!idStr || todos.length === 0) return
     if (userClosedDetailRef.current) return
-    const id = parseInt(idStr, 10)
-    if (isNaN(id)) return
-    const found = todos.find(t => t.id === id)
+    const found = todos.find(t => t.id === idStr)
     if (found) {
       setDetailTodo(found)
       setDetailOpen(true)

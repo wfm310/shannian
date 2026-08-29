@@ -30,7 +30,7 @@ import { toast } from "sonner"
 import { ArrowRight, ArrowLeft, Save, Check, Link2, FileText } from "lucide-react"
 
 interface ProductionDetailProps {
-  taskId: number | null
+  taskId: string | null
   open: boolean
   onOpenChange: (open: boolean) => void
   onUpdated?: () => void
@@ -43,7 +43,7 @@ export function ProductionDetail({
   const [rawContent, setRawContent] = useState("")
   const [scriptSteps, setScriptSteps] = useState<ScriptStepContent[]>([])
   const [topics, setTopics] = useState<Topic[]>([])
-  const [selectedTopicId, setSelectedTopicId] = useState<number | null>(null)
+  const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null)
   const [newTopicTitle, setNewTopicTitle] = useState("")
   const [frameworks, setFrameworks] = useState<ScriptTemplate[]>([])
   const [selectedFramework, setSelectedFramework] = useState<ScriptTemplate | null>(null)
@@ -195,16 +195,15 @@ export function ProductionDetail({
 
   async function handleTopicSelect(value: string) {
     if (!task?.id) return
-    const topicIdNum = Number(value)
-    setSelectedTopicId(topicIdNum)
+    setSelectedTopicId(value)
 
     const newPending = task.pendingStages.filter(s => s !== "topic")
     await updateProductionTask(task.id, {
-      topicId: topicIdNum,
+      topicId: value,
       pendingStages: newPending,
     })
 
-    const topic = await db.topics.get(topicIdNum)
+    const topic = await db.topics.get(value)
     setTopicDetail(topic || null)
 
     const updated = await getProductionTask(task.id)
@@ -232,10 +231,9 @@ export function ProductionDetail({
 
   async function handleFrameworkSelect(value: string) {
     if (!task?.id) return
-    const fwId = Number(value)
     try {
-      await selectFramework(task.id, fwId)
-      const fw = await getScriptTemplate(fwId)
+      await selectFramework(task.id, value)
+      const fw = await getScriptTemplate(value)
       setSelectedFramework(fw || null)
       const updated = await getProductionTask(task.id)
       if (updated) {
@@ -248,7 +246,7 @@ export function ProductionDetail({
     }
   }
 
-  function handleStepContentChange(stepId: number, content: string) {
+  function handleStepContentChange(stepId: string, content: string) {
     setScriptSteps(prev => prev.map(step =>
       step.stepId === stepId ? { ...step, content } : step
     ))

@@ -79,7 +79,7 @@ export function ScriptTemplateDetail({
           {/* 步骤列表 */}
           <div className="space-y-3">
             <h3 className="text-sm font-medium">步骤详情</h3>
-            {template.steps.map((step: { id: number; name: string; guidance: string }, index: number) => (
+            {template.steps.map((step: { id: string; name: string; guidance: string }, index: number) => (
               <div
                 key={step.id}
                 className="border rounded-lg p-3 space-y-1 bg-card"

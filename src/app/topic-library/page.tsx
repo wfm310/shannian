@@ -35,7 +35,7 @@ const CURRENT_USER = "峰岚"
 // ========== 预填数据类型 ==========
 interface PrefillData {
   source: TopicSource
-  sourceId: number | null
+  sourceId: string | null
   topicTitle: string
   topicNote: string
   audience: string
@@ -75,13 +75,13 @@ function TopicLibraryPage() {
 
   // ----- 跟踪从问答收集转化时的关联信息 -----
   // 记录问题 ID 和答案 ID，选题创建成功后用来回写关联
-  const qaConversionRef = useRef<{ questionId: number; answerId: number } | null>(null)
+  const qaConversionRef = useRef<{ questionId: string; answerId: string } | null>(null)
 
   // ----- 跟踪从闪念池联动时的关联信息 -----
   // 记录闪念 ID，选题创建成功后用来回写关联
-  const flashLinkRef = useRef<{ flashId: number; content: string } | null>(null)
+  const flashLinkRef = useRef<{ flashId: string; content: string } | null>(null)
     // ----- 跟踪从灵感记录转化时的关联信息 -----
-  const inspirationLinkRef = useRef<{ inspirationId: number } | null>(null)
+  const inspirationLinkRef = useRef<{ inspirationId: string } | null>(null)
         inspirationLinkRef.current = null
 
 
@@ -109,8 +109,8 @@ function TopicLibraryPage() {
     const from = searchParams.get("from")
     const sourceIdStr = searchParams.get("sourceId")
     if (from === "benchmark" && sourceIdStr) {
-      const sourceId = parseInt(sourceIdStr, 10)
-      if (isNaN(sourceId)) return
+      const sourceId = sourceIdStr
+      if (!sourceId) return
 
       // 重置创建状态标记
       topicCreatedRef.current = false
@@ -180,9 +180,8 @@ function TopicLibraryPage() {
     const answerIdStr = searchParams.get("answerId")
 
     if (from === "qa" && sourceIdStr && answerIdStr) {
-      const questionId = parseInt(sourceIdStr, 10)
-      const answerId = parseInt(answerIdStr, 10)
-      if (isNaN(questionId) || isNaN(answerId)) return
+      const questionId = sourceIdStr
+      const answerId = answerIdStr
 
       // 重置创建状态标记
       topicCreatedRef.current = false
@@ -240,8 +239,8 @@ function TopicLibraryPage() {
     const thought = searchParams.get("thought")
 
     if (from === "flash-thought" && flashIdStr && content) {
-      const flashId = parseInt(flashIdStr, 10)
-      if (isNaN(flashId)) return
+      const flashId = flashIdStr ?? ""
+      if (!flashId) return
 
       // 重置创建状态标记
       topicCreatedRef.current = false
@@ -282,14 +281,12 @@ function TopicLibraryPage() {
     if (isLoading) return
     const openIdStr = searchParams.get("openId")
     if (openIdStr) {
-      const openId = parseInt(openIdStr, 10)
-      if (!isNaN(openId)) {
-        const found = topics.find(t => t.id === openId)
-        if (found) {
-          setDetailTopic(found)
-          setDetailOpen(true)
-          router.replace(pathname, { scroll: false })
-        }
+      const openId = openIdStr
+      const found = topics.find(t => t.id === openId)
+      if (found) {
+        setDetailTopic(found)
+        setDetailOpen(true)
+        router.replace(pathname, { scroll: false })
       }
     }
   }, [searchParams, topics, isLoading, router, pathname])
@@ -301,8 +298,8 @@ function TopicLibraryPage() {
     const sourceIdStr = searchParams.get("sourceId")
 
     if (from === "inspiration" && sourceIdStr) {
-      const sourceId = parseInt(sourceIdStr, 10)
-      if (isNaN(sourceId)) return
+      const sourceId = sourceIdStr
+      if (!sourceId) return
 
       topicCreatedRef.current = false
 
@@ -351,7 +348,7 @@ function TopicLibraryPage() {
   }
 
   // ----- 打开详情 -----
-  function handleOpenDetail(id: number) {
+  function handleOpenDetail(id: string) {
     const found = topics.find(t => t.id === id)
     if (found) {
       setDetailTopic(found)
@@ -369,7 +366,7 @@ function TopicLibraryPage() {
   }
 
   // ----- 选题创建成功回调（从对标/问答/闪念池转化时）-----
-  function handleTopicCreated(topicId: number) {
+  function handleTopicCreated(topicId: string) {
     topicCreatedRef.current = true
 
     if (prefillData?.source === "benchmark" && prefillData.sourceId) {

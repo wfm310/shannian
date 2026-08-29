@@ -4,6 +4,8 @@
 
 // 导入数据库实例和类型
 import { db, type QaQuestion, type QaAnswer, type QaStatus, type QaSource } from "./db"
+// 导入 UUID 生成函数
+import { newId, newSyncFields, touchSyncFields } from "./id"
 // 导入 toast 提示
 import { toast } from "sonner"
 // 导入通知发送函数
@@ -20,7 +22,7 @@ export async function createQuestion(
   content: string,
   source: QaSource,
   initialAnswer?: string
-): Promise<number> {
+): Promise<string> {
   // 去除首尾空格
   const trimmed = content.trim()
   if (!trimmed) {
@@ -33,17 +35,20 @@ export async function createQuestion(
   let status: QaStatus = "unanswered"
   if (initialAnswer && initialAnswer.trim()) {
     answers.push({
-      id: Date.now(),          // 答案唯一ID（时间戳）
+      id: newId(),               // 答案唯一ID（UUID）
       content: initialAnswer.trim(),  // 答案内容
       creator: CURRENT_USER,    // 答案创建人
       topicId: null,            // 转选题前为 null
       createdAt: Date.now(),    // 创建时间
+      ...newSyncFields(),
     })
     status = "answered"  // 有答案就不是"待回答"了
   }
 
   // 写入数据库
-  const id = await db.qaQuestions.add({
+  const id = newId()
+  await db.qaQuestions.add({
+    id,
     content: trimmed,        // 问题内容
     source,                  // 问题来源
     creator: CURRENT_USER,   // 创建人，系统自动识别
@@ -51,10 +56,11 @@ export async function createQuestion(
     status,                  // 状态：有初始答案为"已回答"，否则"待回答"
     createdAt: Date.now(),   // 创建时间
     processedAt: null,        // 处理时间初始为 null
+    ...newSyncFields(),
   })
 
   toast.success("问答已创建")
-  return id as number
+  return id
 }
 
 
@@ -82,7 +88,7 @@ export async function getQuestions(params?: {
 
 // ========== 3. 获取单条问答 ==========
 // 用于打开详情弹窗时获取完整数据（含答案列表）
-export async function getQuestion(id: number): Promise<QaQuestion | undefined> {
+export async function getQuestion(id: string): Promise<QaQuestion | undefined> {
   return db.qaQuestions.get(id)
 }
 
@@ -91,7 +97,7 @@ export async function getQuestion(id: number): Promise<QaQuestion | undefined> {
 // 在已有问答中追加一条新答案
 // 答案创建后只读，不可编辑或删除
 // 如果问题状态是"待回答"，添加答案后自动变为"已回答"
-export async function addAnswer(questionId: number, content: string): Promise<void> {
+export async function addAnswer(questionId: string, content: string): Promise<void> {
   const trimmed = content.trim()
   if (!trimmed) {
     toast.error("答案内容不能为空")
@@ -107,11 +113,12 @@ export async function addAnswer(questionId: number, content: string): Promise<vo
 
   // 构造新答案对象
   const newAnswer: QaAnswer = {
-    id: Date.now(),          // 答案唯一ID（时间戳），用于追溯和关联选题
+    id: newId(),             // 答案唯一ID（UUID），用于追溯和关联选题
     content: trimmed,         // 答案内容
     creator: CURRENT_USER,    // 答案创建人，系统自动识别
     topicId: null,            // 转选题前为 null
     createdAt: Date.now(),    // 创建时间
+    ...newSyncFields(),
   }
 
   // 把新答案追加到 answers 数组末尾
@@ -124,6 +131,7 @@ export async function addAnswer(questionId: number, content: string): Promise<vo
   await db.qaQuestions.update(questionId, {
     answers: updatedAnswers,
     status: question.status === "unanswered" ? "answered" : question.status,
+    ...touchSyncFields(question.syncVersion || 0),
   })
 
   toast.success("答案已添加")
@@ -134,9 +142,9 @@ export async function addAnswer(questionId: number, content: string): Promise<vo
 // 转选题成功后调用，把选题 ID 写入对应答案的 topicId
 // 同时更新问题状态为"已转选题"
 export async function markAnswerTopicLinked(
-  questionId: number,
-  answerId: number,
-  topicId: number
+  questionId: string,
+  answerId: string,
+  topicId: string
 ): Promise<void> {
   // 获取当前问答
   const question = await db.qaQuestions.get(questionId)
@@ -152,6 +160,7 @@ export async function markAnswerTopicLinked(
     answers: updatedAnswers,
     status: "converted",                        // 状态变为"已转选题"
     processedAt: question.processedAt || Date.now(),  // 记录处理时间（只记第一次）
+    ...touchSyncFields(question.syncVersion || 0),
   })
 }
 
@@ -159,11 +168,14 @@ export async function markAnswerTopicLinked(
 // ========== 6. 闪念池联动 - 回写关联 ==========
 // 问答创建成功后调用，把问答 ID 写入闪念的 relatedId
 // 这样闪念池详情就能跳转到关联的问答
-export async function markFlashThoughtLinked(flashId: number, questionId: number): Promise<void> {
+export async function markFlashThoughtLinked(flashId: string, questionId: string): Promise<void> {
+  const flash = await db.flashThoughts.get(flashId)
+  if (!flash) return
   await db.flashThoughts.update(flashId, {
     relatedId: questionId,
     status: "categorized",
     processedAt: Date.now(),
+    ...touchSyncFields(flash.syncVersion || 0),
   })
 }
 

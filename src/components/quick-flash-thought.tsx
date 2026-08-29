@@ -21,6 +21,7 @@ import { Lightbulb } from "lucide-react"
 import { toast } from "sonner"
 import { db } from "@/lib/db"
 import type { FlashThought } from "@/lib/db"
+import { newId, newSyncFields } from "@/lib/id"
 
 // localStorage 存储键名
 const STORAGE_KEY = "quick-flash-draft"
@@ -121,6 +122,7 @@ export function QuickFlashThought() {
       thought: null,
       createdAt: now,
       processedAt: null,
+      ...newSyncFields(),
     }
 
     await db.flashThoughts.add(flash)

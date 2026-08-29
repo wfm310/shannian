@@ -44,7 +44,7 @@ function BenchmarkPage() {
   const [benchmarks, setBenchmarks] = useState<Benchmark[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const showSkeleton = useDelayedLoading(isLoading, 150)
-  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
   const [activeFilter, setActiveFilter] = useState<string>("all")
   const [formOpen, setFormOpen] = useState(false)
   const [transferOpen, setTransferOpen] = useState(false)
@@ -84,12 +84,9 @@ function BenchmarkPage() {
   useEffect(() => {
     const idStr = searchParams.get("id")
     if (idStr) {
-      const id = parseInt(idStr, 10)
-      if (!isNaN(id)) {
-        setSelectedId(id)
-        if (isMobile) {
-          setDetailVisible(true)
-        }
+      setSelectedId(idStr)
+      if (isMobile) {
+        setDetailVisible(true)
       }
     }
   }, [searchParams, isMobile])
@@ -122,7 +119,7 @@ function BenchmarkPage() {
   const selectedBenchmark = benchmarks.find(b => b.id === selectedId) || null
 
   // 选中视频 → 打开详情
-  const handleSelect = useCallback((id: number) => {
+  const handleSelect = useCallback((id: string) => {
     setSelectedId(id)
     if (isMobile) {
       setDetailVisible(true)
@@ -178,7 +175,7 @@ function BenchmarkPage() {
   }, [handleBack])
 
   // 更新数据
-  const handleUpdate = useCallback(async (id: number, updates: Partial<Benchmark>) => {
+  const handleUpdate = useCallback(async (id: string, updates: Partial<Benchmark>) => {
     await updateBenchmark(id, updates)
     await loadData()
   }, [loadData])

@@ -52,7 +52,7 @@ interface TrackingOverviewProps {
   onSearchChange: (v: string) => void
   activeFilter: string
   onFilterChange: (v: string) => void
-  onVideoClick: (publishRecordId: number) => void
+  onVideoClick: (publishRecordId: string) => void
 }
 
 

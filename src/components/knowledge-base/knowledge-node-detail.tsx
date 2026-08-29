@@ -41,7 +41,7 @@ export function KnowledgeNodeDetail({
   const inEdges = edges.filter((e) => e.targetNodeId === node.id)
 
   // 从边找对应的节点
-  const findNode = (id: number) => allNodes.find((n) => n.id === id)
+  const findNode = (id: string) => allNodes.find((n) => n.id === id)
 
   // 跳转到来源模块
   const moduleHref = `/${node.sourceModule}`

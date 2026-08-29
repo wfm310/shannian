@@ -19,6 +19,7 @@ import {
   generatePresetSteps, frameworkTypeOptions, frameworkPresets,
 } from "@/lib/script-template"
 import type { ScriptTemplate, ScriptStep, FrameworkType } from "@/lib/db"
+import { newId, newSyncFields } from "@/lib/id"
 import { toast } from "sonner"
 import { Plus, Trash2, GripVertical } from "lucide-react"
 
@@ -85,14 +86,14 @@ export function ScriptTemplateForm({ open, onOpenChange, editing, onSaved }: Scr
   }
 
   // ----- 更新步骤名 -----
-  function updateStepName(stepId: number, name: string) {
+  function updateStepName(stepId: string, name: string) {
     setSteps(prev => prev.map(s =>
       s.id === stepId ? { ...s, name } : s
     ))
   }
 
   // ----- 更新步骤指导说明 -----
-  function updateStepGuidance(stepId: number, guidance: string) {
+  function updateStepGuidance(stepId: string, guidance: string) {
     setSteps(prev => prev.map(s =>
       s.id === stepId ? { ...s, guidance } : s
     ))
@@ -101,9 +102,10 @@ export function ScriptTemplateForm({ open, onOpenChange, editing, onSaved }: Scr
   // ----- 添加步骤（清单盘点型常用） -----
   function addStep() {
     const newStep: ScriptStep = {
-      id: Date.now(),
+      id: newId(),
       name: `第${steps.length + 1}点`,
       guidance: "",
+      ...newSyncFields(),
     }
     setSteps(prev => {
       // 插在"总结+引导"前面（如果有）
@@ -116,7 +118,7 @@ export function ScriptTemplateForm({ open, onOpenChange, editing, onSaved }: Scr
   }
 
   // ----- 删除步骤 -----
-  function removeStep(stepId: number) {
+  function removeStep(stepId: string) {
     setSteps(prev => prev.filter(s => s.id !== stepId))
   }
 

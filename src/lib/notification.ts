@@ -4,6 +4,7 @@
 
 // 导入数据库和类型
 import { db, type NotificationType, type RelatedModule } from "./db"
+import { newId, newSyncFields } from "./id"
 
 // 导入 toast 提示（项目已预装 sonner）
 import { toast } from "sonner"
@@ -30,12 +31,14 @@ export async function sendNotification(params: {
   title: string
   content: string
   relatedModule: RelatedModule
-  relatedId?: number
+  relatedId?: string
   receiver: string
   showToast?: boolean
 }) {
   // 1. 存到数据库
-  const id = await db.notifications.add({
+  const id = newId()
+  await db.notifications.add({
+    id,
     title: params.title,
     type: params.type,
     content: params.content,
@@ -44,6 +47,7 @@ export async function sendNotification(params: {
     receiver: params.receiver,
     status: "unread",         // 新通知默认未读
     createdAt: Date.now(),    // 记录当前时间
+    ...newSyncFields(),
   })
 
   // 2. 弹 toast 提示（默认弹）
@@ -63,7 +67,7 @@ export async function sendNotification(params: {
 
 // ========== 标记为已读 ==========
 // 用户点击消息后调用，把状态从 unread 改成 read
-export async function markAsRead(id: number) {
+export async function markAsRead(id: string) {
   await db.notifications.update(id, { status: "read" })
   // 状态变了，通知组件刷新
   notifyNotificationsChanged()
@@ -75,7 +79,7 @@ export async function markAsRead(id: number) {
 // 比如任务完成了，对应的待办通知自动变成"已处理"
 export async function markAsHandled(
   relatedModule: RelatedModule,
-  relatedId: number
+  relatedId: string
 ) {
   // 找到对应模块和 ID 的所有通知，标记为已处理
   const notifications = await db.notifications

@@ -2,6 +2,7 @@
 // 提供 CRUD 操作和 5 种框架的预设步骤配置
 
 import { db, type ScriptTemplate, type ScriptStep, type FrameworkType } from "./db"
+import { newId, newSyncFields, touchSyncFields } from "./id"
 import { toast } from "sonner"
 
 // 当前登录用户（系统自动识别）
@@ -85,7 +86,7 @@ export async function createScriptTemplate(
   title: string,
   frameworkType: FrameworkType,
   steps: ScriptStep[]
-): Promise<number> {
+): Promise<string> {
   const trimmed = title.trim()
   if (!trimmed) {
     toast.error("请输入框架名称")
@@ -97,17 +98,20 @@ export async function createScriptTemplate(
   }
 
   const now = Date.now()
-  const id = await db.scriptTemplates.add({
+  const id = newId()
+  await db.scriptTemplates.add({
+    id,
     title: trimmed,
     frameworkType,
     steps,
     creator: CURRENT_USER,
     createdAt: now,
+    ...newSyncFields(),
     updatedAt: now,
   })
 
   toast.success("脚本框架已创建")
-  return id as number
+  return id
 }
 
 
@@ -132,7 +136,7 @@ export async function getScriptTemplates(
 
 // ========== 3. 获取单条框架 ==========
 
-export async function getScriptTemplate(id: number): Promise<ScriptTemplate | undefined> {
+export async function getScriptTemplate(id: string): Promise<ScriptTemplate | undefined> {
   return db.scriptTemplates.get(id)
 }
 
@@ -140,7 +144,7 @@ export async function getScriptTemplate(id: number): Promise<ScriptTemplate | un
 // ========== 4. 更新框架 ==========
 
 export async function updateScriptTemplate(
-  id: number,
+  id: string,
   updates: { title?: string; steps?: ScriptStep[] }
 ): Promise<void> {
   if (updates.title !== undefined && !updates.title.trim()) {
@@ -148,10 +152,13 @@ export async function updateScriptTemplate(
     throw new Error("框架名称不能为空")
   }
 
+  const template = await db.scriptTemplates.get(id)
+  if (!template) return
+
   await db.scriptTemplates.update(id, {
     ...updates,
     title: updates.title?.trim() || undefined,
-    updatedAt: Date.now(),
+    ...touchSyncFields(template.syncVersion || 0),
   })
 
   toast.success("脚本框架已更新")
@@ -167,10 +174,10 @@ export async function updateScriptTemplate(
 // 选了框架类型后，自动带出默认步骤（带唯一ID）
 export function generatePresetSteps(type: FrameworkType): ScriptStep[] {
   const preset = frameworkPresets[type]
-  const now = Date.now()
-  return preset.steps.map((step, index) => ({
-    id: now + index,        // 时间戳+索引，保证唯一
+  return preset.steps.map((step) => ({
+    id: newId(),            // UUID，保证唯一
     name: step.name,
     guidance: step.guidance,
+    ...newSyncFields(),
   }))
 }

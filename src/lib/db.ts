@@ -39,7 +39,7 @@ type TodoSource =
 // interface 是 TypeScript 的类型定义
 // 它告诉编译器：每条待办数据应该长什么样
 export interface Todo {
-  id?: number                        // 主键，Dexie 自增（加了?表示创建时不传，自动生成）
+  id?: string                        // 主键，UUID（创建时自动生成，见 lib/id.ts）
   title: string                      // 任务名称（新建填写，不可改）
   description: string                // 任务详细介绍（新建填写，不可改）
   initialPriority: Priority          // 初始优先级（新建填写，不可改，后续系统自动升阶）
@@ -47,7 +47,7 @@ export interface Todo {
   dueDate: number                    // 截止日期（时间戳，新建填写，不可改，驱动优先级升阶）
   linkedModules: string[]            // 关联模块（新建填写，不可改，如 ["benchmark", "topic"]）
   progressTargets: Record<string, number>   // 每个关联模块的进度目标数，如 { benchmark: 50, topic: 5 }
-  linkedIds: Record<string, number[]>        // 新增：关联模块的具体记录ID列表
+  linkedIds: Record<string, string[]>        // 新增：关联模块的具体记录ID列表
   // 例如 { benchmark: [1, 3, 7] }，表示关联了对标记录 1、3、7
   // 有这个字段时，进度从关联记录实时计算，不用 progressTargets/progressCompleted
   status: TodoStatus                 // 状态（系统自动流转，不可手动改）
@@ -60,6 +60,10 @@ export interface Todo {
   completedAt: number | null        // 完成时间（标记完成时记录，未完成为 null）
   archived: boolean                  // 是否已归档（当天 23:59 自动设为 true）
   archivedAt?: number | null         // 归档时间（自动归档时记录时间戳）
+  // ===== 同步字段（云端同步用，见技术决策记录 4.2 #11）=====
+  updatedAt: number                  // 最后更新时间（任何修改都会刷新，同步层据此判断增量）
+  synced: boolean                    // 是否已同步到云端（本地改动后为 false，同步成功后为 true）
+  syncVersion: number                // 乐观并发版本号（每次更新 +1，解决两人同时改同一条的冲突）
 }
 
 // ========== 消息通知类型 ==========
@@ -87,15 +91,19 @@ type RelatedModule =
 
 // ========== 通知接口 ==========
 export interface Notification {
-  id?: number                        // 主键，Dexie 自增
+  id?: string                        // 主键，UUID
   title: string                      // 通知标题
   type: NotificationType             // 通知类型
   content: string                    // 简要内容
   relatedModule: RelatedModule       // 关联模块
-  relatedId: number | null           // 关联记录 ID
+  relatedId: string | null           // 关联记录 ID
   receiver: string                   // 接收人
   status: NotificationStatus         // 消息状态
   createdAt: number                  // 通知时间
+  // ===== 同步字段 =====
+  updatedAt: number                  // 最后更新时间
+  synced: boolean                    // 是否已同步到云端
+  syncVersion: number                // 乐观并发版本号
 }
 
 
@@ -109,14 +117,18 @@ type CategoryTarget = "topic" | "qa" | "inspiration"
 
 // 闪念数据接口
 export interface FlashThought {
-  id?: number                        // 主键，Dexie 自增
+  id?: string                        // 主键，UUID
   content: string                    // 闪念内容
   status: FlashStatus                // 状态
   categoryTarget: CategoryTarget | null  // 归类目标
-  relatedId: number | null           // 关联记录 ID
+  relatedId: string | null           // 关联记录 ID
   thought: string | null             // 处理时的想法
   createdAt: number                  // 创建时间
   processedAt: number | null         // 处理时间
+  // ===== 同步字段 =====
+  updatedAt: number                  // 最后更新时间
+  synced: boolean                    // 是否已同步到云端
+  syncVersion: number                // 乐观并发版本号
 }
 
 // ========== 对标拆解 ==========
@@ -211,14 +223,14 @@ interface AssigneeRecord {
 
 // 转化关联 ID
 interface ConvertedIds {
-  topicId?: number      // 转化为选题的 ID
-  inspirationId?: number // 转化为灵感的 ID
+  topicId?: string      // 转化为选题的 ID
+  inspirationId?: string // 转化为灵感的 ID
 }
 
 // ========== 对标拆解接口 ==========
 export interface Benchmark {
   // ===== 基础信息 =====
-  id?: number                           // 主键，Dexie 自增
+  id?: string                           // 主键，UUID
   title: string                         // 对标视频标题
   videoUrl: string                      // 原视频链接
   sourceChannel: SourceChannel          // 来源渠道
@@ -265,6 +277,10 @@ export interface Benchmark {
   createdAt: number                     // 记录时间
   convertedTargets: string[]            // 已转化目标
   convertedIds: ConvertedIds            // 转化关联 ID
+  // ===== 同步字段 =====
+  updatedAt: number                     // 最后更新时间
+  synced: boolean                       // 是否已同步到云端
+  syncVersion: number                   // 乐观并发版本号
 }
 
 // ========== 选题库 ==========
@@ -300,7 +316,7 @@ type PriorityLevel = "urgent" | "scheduled" | "reserve"
 // ========== 选题接口 ==========
 export interface Topic {
   // ===== 基础信息 =====
-  id?: number // 主键，Dexie 自增
+  id?: string // 主键，UUID
   topicTitle: string // 选题标题（最终凝练选题）
   topicNote: string // 选题备注（凝练出的文案）
   creator: string // 创建人（系统自动识别）
@@ -308,7 +324,7 @@ export interface Topic {
 
   // ===== 关联信息（快照复制） =====
   source: TopicSource // 选题来源
-  sourceId: number | null // 来源关联记录 ID（点击可跳转）
+  sourceId: string | null // 来源关联记录 ID（点击可跳转）
   audience: string // 人群维度（与对标拆解字段一致，快照）
   demand: string // 需求维度（与对标拆解字段一致，快照）
   contentDimension: string // 内容维度（与对标拆解字段一致，快照）
@@ -328,6 +344,9 @@ export interface Topic {
 
   // ===== 其他 =====
   updatedAt: number // 更新时间
+  // ===== 同步字段 =====
+  synced: boolean   // 是否已同步到云端
+  syncVersion: number // 乐观并发版本号
 }
 
 // ========== 问答收集 ==========
@@ -346,16 +365,16 @@ type QaStatus = "unanswered" | "answered" | "converted"
 
 // 答案结构（嵌套在问题的 answers 数组里，不是独立的表）
 interface QaAnswer {
-  id: number              // 答案唯一ID（时间戳），用于追溯和关联选题
+  id: string              // 答案唯一ID（UUID），用于追溯和关联选题
   content: string         // 答案内容
   creator: string         // 答案创建人（系统自动识别账号，任何人都可以新增）
-  topicId: number | null  // 转选题后关联的选题ID，未转为 null
+  topicId: string | null  // 转选题后关联的选题ID，未转为 null
   createdAt: number       // 创建时间（时间戳）
 }
 
 // ========== 问答接口 ==========
 export interface QaQuestion {
-  id?: number             // 主键，Dexie 自增
+  id?: string             // 主键，UUID
   content: string         // 问题内容，创建后只读
   source: QaSource        // 问题来源，创建后只读
   creator: string         // 创建人（负责人），系统自动识别当前登录账号
@@ -363,6 +382,10 @@ export interface QaQuestion {
   status: QaStatus        // 状态（系统自动流转）
   createdAt: number       // 创建时间（时间戳，自动记录）
   processedAt: number | null  // 处理时间（首次转选题时记录，未转为 null）
+  // ===== 同步字段 =====
+  updatedAt: number       // 最后更新时间
+  synced: boolean         // 是否已同步到云端
+  syncVersion: number     // 乐观并发版本号
 }
 
 // ========== 灵感记录 ==========
@@ -381,17 +404,20 @@ type InspirationStatus = "draft" | "completed" | "converted"
 
 // ========== 灵感记录接口 ==========
 export interface Inspiration {
-  id?: number                     // 主键，Dexie 自增
+  id?: string                     // 主键，UUID
   content: string                 // 灵感内容（你的灵感是什么？）
   thoughtProcess: string          // 思考过程（你的思考过程是什么？）
   conclusion: string              // 结论（最终得出来什么结论？）
   source: InspirationSource       // 灵感来源
-  sourceId: number | null         // 来源关联记录 ID（点击可跳转）
+  sourceId: string | null         // 来源关联记录 ID（点击可跳转）
   status: InspirationStatus       // 状态（系统根据结论自动判断，转选题后为 converted）
   creator: string                 // 创建人（系统自动识别）
-  topicId: number | null          // 转选题后关联的选题 ID
+  topicId: string | null          // 转选题后关联的选题 ID
   createdAt: number               // 创建时间（时间戳）
   updatedAt: number               // 更新时间（时间戳）
+  // ===== 同步字段 =====
+  synced: boolean                 // 是否已同步到云端
+  syncVersion: number             // 乐观并发版本号
 }
 
 // ========== 脚本框架库 ==========
@@ -407,20 +433,26 @@ type FrameworkType = "standard" | "story" | "correction" | "checklist" | "qa"
 // 步骤子结构
 // 每个步骤包含：步骤名（可改）+ 指导说明（提示这个步骤要干什么）
 interface ScriptStep {
-  id: number              // 步骤唯一ID（时间戳），用于 React key 和排序
+  id: string              // 步骤唯一ID（UUID），用于 React key 和排序
   name: string            // 步骤名（可改，如"抛观点"→"痛点引入"）
   guidance: string        // 指导说明（如"3秒内抛出核心观点，抓住注意力"）
+  // ===== 同步字段 =====
+  synced: boolean
+  syncVersion: number
 }
 
 // 脚本框架主结构
 interface ScriptTemplate {
-  id?: number             // 自增主键
+  id?: string             // 主键，UUID
   title: string           // 框架名称（如"职场妈妈时间管理干货"）
   frameworkType: FrameworkType  // 框架类型（5选1）
   steps: ScriptStep[]     // 步骤数组，选类型后自动带出预设步骤
   creator: string         // 创建人（系统自动识别）
   createdAt: number       // 创建时间（时间戳）
   updatedAt: number       // 更新时间（时间戳，每次编辑更新）
+  // ===== 同步字段 =====
+  synced: boolean         // 是否已同步到云端
+  syncVersion: number     // 乐观并发版本号
 }
 
 // ========== 内容生产流程 ==========
@@ -446,7 +478,7 @@ type ProductionStatus = "active" | "completed"
 
 // 步骤文案内容（选框架后从框架步骤初始化，用户按步骤写文案）
 interface ScriptStepContent {
-  stepId: number              // 框架步骤ID（从 ScriptStep.id 复制）
+  stepId: string              // 框架步骤ID（从 ScriptStep.id 复制）
   stepName: string            // 步骤名称（快照，从 ScriptStep.name 复制）
   guidance: string            // 引导语（快照，从 ScriptStep.guidance 复制）
   content: string             // 用户写的该步骤文案（初始为空）
@@ -454,11 +486,11 @@ interface ScriptStepContent {
 
 // ========== 内容生产流程接口 ==========
 export interface ProductionTask {
-  id?: number                        // 主键，Dexie 自增
+  id?: string                        // 主键，UUID
   title: string                      // 任务标题（标准模式继承选题标题；即兴模式默认"即兴创作"，首次保存文案时自动取前15字）
   mode: ProductionMode               // 生产模式
-  topicId: number | null             // 关联选题ID（标准模式创建时必填；即兴模式待补填）
-  frameworkId: number | null        // 关联脚本框架ID（脚本撰写阶段必填）
+  topicId: string | null             // 关联选题ID（标准模式创建时必填；即兴模式待补填）
+  frameworkId: string | null        // 关联脚本框架ID（脚本撰写阶段必填）
   rawContent: string                 // 即兴模式的自由文本（标准模式为空字符串）
   scriptSteps: ScriptStepContent[]   // 按框架步骤分段的文案内容（选框架后初始化）
   currentStage: ProductionStage      // 当前阶段
@@ -467,6 +499,10 @@ export interface ProductionTask {
   assignee: string                   // 负责人（固定"峰岚"）
   createdAt: number                  // 创建时间（时间戳）
   publishedAt: number | null        // 发布移交时间（未移交为 null）
+  // ===== 同步字段 =====
+  updatedAt: number                  // 最后更新时间
+  synced: boolean                    // 是否已同步到云端
+  syncVersion: number                // 乐观并发版本号
 }
 
 // ========== 制作发布接口 ==========
@@ -484,8 +520,8 @@ type TagCategory = "track" | "content" | "audience" | "hot"
 
 // 发布记录
 export interface PublishRecord {
-  id?: number                        // 主键，Dexie 自增
-  productionId: number              // 关联生产任务ID
+  id?: string                        // 主键，UUID
+  productionId: string              // 关联生产任务ID
   title: string                      // 发布标题（用户填写，参考公式）
   titleFormula: TitleFormula | null  // 使用的标题公式（仅参考，可不选）
   description: string                // 描述文案（简要概括视频内容）
@@ -497,15 +533,22 @@ export interface PublishRecord {
   assignee: string                   // 负责人（固定"峰岚"）
   createdAt: number                  // 创建时间
   updatedAt: number                  // 更新时间
+  // ===== 同步字段 =====
+  synced: boolean                    // 是否已同步到云端
+  syncVersion: number                // 乐观并发版本号
 }
 
 // 标签库
 export interface TagLibrary {
-  id?: number                        // 主键，Dexie 自增
+  id?: string                        // 主键，UUID
   tag: string                        // 标签文本（不含 # 号）
   category: TagCategory              // 标签分类
   usageCount: number                 // 使用次数（排序用，初始 0）
   createdAt: number                  // 创建时间
+  // ===== 同步字段 =====
+  updatedAt: number                  // 最后更新时间
+  synced: boolean                    // 是否已同步到云端
+  syncVersion: number                // 乐观并发版本号
 }
 
 // ========== 数据追踪接口 ==========
@@ -521,8 +564,8 @@ type TrackingStatus = "pending" | "recorded"
 
 // 追踪记录（每条对应一个节点）
 export interface TrackingRecord {
-  id?: number                          // 主键，Dexie 自增
-  publishRecordId: number              // 关联发布记录ID
+  id?: string                          // 主键，UUID
+  publishRecordId: string              // 关联发布记录ID
   node: TrackingNode                    // 追踪节点
   customLabel: string                   // 自定义节点标签（custom 时填写）
   // 流量数据
@@ -547,6 +590,9 @@ export interface TrackingRecord {
   assignee: string                       // 负责人（固定"峰岚"）
   createdAt: number                      // 创建时间
   updatedAt: number                      // 更新时间
+  // ===== 同步字段 =====
+  synced: boolean                        // 是否已同步到云端
+  syncVersion: number                    // 乐观并发版本号
 }
 
 // ========== 复盘记录接口 ==========
@@ -571,14 +617,14 @@ type ExperienceCategory = "content_creation" | "operation_strategy" | "process_e
 
 // 做得好/不好的条目
 interface ReviewItem {
-  id: number
+  id: string
   dimension: ReviewDimension
   description: string
 }
 
 // 可复用经验条目
 interface ReviewExperience {
-  id: number
+  id: string
   title: string
   content: string
   category: ExperienceCategory
@@ -587,7 +633,7 @@ interface ReviewExperience {
 
 // 下一步行动条目
 interface ReviewAction {
-  id: number
+  id: string
   content: string
   priority: Priority
   dueDate: number | null
@@ -596,11 +642,11 @@ interface ReviewAction {
 
 // 复盘记录
 export interface ReviewRecord {
-  id?: number                          // 主键，Dexie 自增
+  id?: string                          // 主键，UUID
   title: string                         // 复盘标题（自动生成，可修改）
   type: ReviewType                      // 复盘类型
   period: ReviewPeriod | null           // 周期类型（周期性必填）
-  publishRecordId: number | null        // 关联发布记录（单条视频必填）
+  publishRecordId: string | null        // 关联发布记录（单条视频必填）
   periodStart: number | null            // 周期开始时间（周期性必填）
   periodEnd: number | null              // 周期结束时间（周期性必填）
   trigger: ReviewTrigger                // 触发方式
@@ -618,6 +664,9 @@ export interface ReviewRecord {
   completedAt: number | null            // 完成复盘时间
   createdAt: number                      // 创建时间
   updatedAt: number                      // 更新时间
+  // ===== 同步字段 =====
+  synced: boolean                        // 是否已同步到云端
+  syncVersion: number                    // 乐观并发版本号
 }
 
 // ========== 大脑知识库 ==========
@@ -646,39 +695,55 @@ type KnowledgeEdgeType =
 
 // 知识节点
 export interface KnowledgeNode {
-  id?: number
+  id?: string
   nodeType: KnowledgeNodeType
   title: string
   summary: string
   sourceModule: string
-  sourceRecordId: number
+  sourceRecordId: string
   tags: string[]
   status: string
-  links: number[]       // 引用的其他节点ID列表（手动添加的双向链接）
-  linkedBy: number[]    // 被哪些节点引用（自动反向计算，不需要手动维护）
+  links: string[]       // 引用的其他节点ID列表（手动添加的双向链接）
+  linkedBy: string[]    // 被哪些节点引用（自动反向计算，不需要手动维护）
   createdAt: number
   updatedAt: number
+  // ===== 同步字段 =====
+  synced: boolean
+  syncVersion: number
 }
 
 // 知识边
 export interface KnowledgeEdge {
-  id?: number
-  sourceNodeId: number
-  targetNodeId: number
+  id?: string
+  sourceNodeId: string
+  targetNodeId: string
   edgeType: KnowledgeEdgeType
   weight: number
   createdAt: number
+  // ===== 同步字段 =====
+  synced: boolean
+  syncVersion: number
 }
 
 // 知识笔记（用户手动创建的 Markdown 笔记）
 interface KnowledgeNote {
-  id?: number              // 主键，自增
+  id?: string              // 主键，UUID
   title: string            // 笔记标题
   content: string          // Markdown 正文（可包含 [[双向链接]]）
   tags: string[]           // 标签列表
-  links: number[]          // 引用的节点ID列表
+  links: string[]          // 引用的节点ID列表
   createdAt: number       // 创建时间
   updatedAt: number       // 更新时间
+  // ===== 同步字段 =====
+  synced: boolean
+  syncVersion: number
+}
+
+// ========== 同步元信息表 ==========
+// 记录本地与云端最后一次同步的时间，供同步层判断增量
+export interface SyncMeta {
+  key: string            // 固定为 "lastSync" 等
+  value: number          // 时间戳（毫秒）
 }
 
 // 导出类型，供其他文件使用
@@ -719,43 +784,48 @@ export type {
 // ========== 创建数据库 ==========
 // 继承 Dexie 类，创建一个名为 "shannian-pro" 的数据库
 class ShannianDatabase extends Dexie {
-  todos!: Dexie.Table<Todo, number>  // todos 表，存储 Todo 类型数据，主键是 number（!表示在构造函数里赋值）
+  // 主键类型已从 number 改为 string（UUID）
+  // 原因：自增数字在各设备各自计数，同步到云端会撞号，详见 lib/id.ts
+  todos!: Dexie.Table<Todo, string>  // todos 表（!表示在构造函数里赋值）
 
-  notifications!: Dexie.Table<Notification, number>  // 通知表
+  notifications!: Dexie.Table<Notification, string>  // 通知表
 
-  flashThoughts!: Dexie.Table<FlashThought, number>  // 闪念池表
+  flashThoughts!: Dexie.Table<FlashThought, string>  // 闪念池表
 
-  benchmarks!: Dexie.Table<Benchmark, number>  // 对标拆解表
+  benchmarks!: Dexie.Table<Benchmark, string>  // 对标拆解表
 
-  topics!: Dexie.Table<Topic, number> // 选题库表
+  topics!: Dexie.Table<Topic, string> // 选题库表
 
-  qaQuestions!: Dexie.Table<QaQuestion, number>  // 新增：问答收集表
+  qaQuestions!: Dexie.Table<QaQuestion, string>  // 问答收集表
 
-  inspirations!: Dexie.Table<Inspiration, number>  // 新增：灵感记录表
+  inspirations!: Dexie.Table<Inspiration, string>  // 灵感记录表
 
-  scriptTemplates!: Dexie.Table<ScriptTemplate, number>  // 脚本框架库表
+  scriptTemplates!: Dexie.Table<ScriptTemplate, string>  // 脚本框架库表
 
-  productions!: Dexie.Table<ProductionTask, number>  // 内容生产流程表
+  productions!: Dexie.Table<ProductionTask, string>  // 内容生产流程表
 
-  publishRecords!: Dexie.Table<PublishRecord, number>  // 制作发布记录表
+  publishRecords!: Dexie.Table<PublishRecord, string>  // 制作发布记录表
 
-  tagLibrary!: Dexie.Table<TagLibrary, number>  // 常用标签库表
+  tagLibrary!: Dexie.Table<TagLibrary, string>  // 常用标签库表
 
-  trackingRecords!: Dexie.Table<TrackingRecord, number>  // 数据追踪记录表
+  trackingRecords!: Dexie.Table<TrackingRecord, string>  // 数据追踪记录表
 
-  reviewRecords!: Dexie.Table<ReviewRecord, number>  // 复盘记录表
+  reviewRecords!: Dexie.Table<ReviewRecord, string>  // 复盘记录表
 
-  knowledgeNodes!: Dexie.Table<KnowledgeNode, number>  // 知识节点表
+  knowledgeNodes!: Dexie.Table<KnowledgeNode, string>  // 知识节点表
 
-  knowledgeEdges!: Dexie.Table<KnowledgeEdge, number>  // 知识边表
+  knowledgeEdges!: Dexie.Table<KnowledgeEdge, string>  // 知识边表
 
-  knowledgeNotes!: Dexie.Table<KnowledgeNote, number>  // 知识笔记表
+  knowledgeNotes!: Dexie.Table<KnowledgeNote, string>  // 知识笔记表
+
+  syncMeta!: Dexie.Table<SyncMeta, string>  // 同步元信息表（记录最后同步时间）
   constructor() {
     // 数据库名称（在浏览器 IndexedDB 里用这个名字查找）
     super("shannian-pro")
 
     // 定义数据库版本和表结构
-    // "++id" → id 字段自增（1, 2, 3...）
+    // 历史版本用的是 "++id"（自增数字），从 version 12 起改为 UUID 字符串
+    // 字符串主键索引写作 "id"（不加 ++），由代码在写入前生成 UUID
     // 后面是其他字段名，用逗号分隔，这些字段会被索引（可以用来排序/筛选）
     this.version(1).stores({
       todos: "++id, title, initialPriority, assignee, dueDate, status, source, creator, createdAt, completedAt, archived",
@@ -912,6 +982,90 @@ class ShannianDatabase extends Dexie {
       knowledgeNodes: "++id, nodeType, sourceModule, sourceRecordId, createdAt, updatedAt",
       knowledgeEdges: "++id, sourceNodeId, targetNodeId, edgeType, createdAt",
       knowledgeNotes: "++id, createdAt, updatedAt",
+    })
+
+    // version 12：主键从自增数字改为 UUID 字符串
+    //
+    // 为什么要改？
+    //   自增数字是「各设备各自计数」的，你电脑上第 1 条和小伙伴手机上第 1 条
+    //   是两条完全不同的记录，编号却都是 1 —— 同步到云端会撞号导致数据错乱。
+    //   UUID 全球唯一，永不冲突，是双人协作 + 云端同步的前提。
+    //
+    // 索引写法从 "++id" 改为 "id"（去掉 ++，表示由代码提供主键值，不由数据库自增）
+    //
+    // ⚠️ 注意：本次改动不保留旧数据
+    //   旧数据的主键是数字，新主键是字符串，类型不兼容，无法自动迁移。
+    //   由于当前数据库里都是测试数据，这里直接清空重建。
+    //   （若是真实数据，需要先导出备份再迁移）
+    this.version(12).stores({
+      todos: "id, title, initialPriority, assignee, dueDate, status, source, creator, createdAt, completedAt, archived",
+      notifications: "id, type, relatedModule, receiver, status, createdAt",
+      flashThoughts: "id, status, categoryTarget, createdAt, processedAt",
+      benchmarks: "id, status, assignee, sourceChannel, createdAt",
+      topics: "id, status, source, priorityLevel, creator, createdAt",
+      qaQuestions: "id, status, source, creator, createdAt",
+      inspirations: "id, status, source, creator, createdAt, updatedAt",
+      scriptTemplates: "id, frameworkType, creator, createdAt, updatedAt",
+      productions: "id, mode, currentStage, status, assignee, createdAt",
+      publishRecords: "id, productionId, status, assignee, createdAt, updatedAt",
+      tagLibrary: "id, category, createdAt",
+      trackingRecords: "id, publishRecordId, node, status, assignee, createdAt, updatedAt",
+      reviewRecords: "id, type, status, assignee, createdAt, completedAt",
+      knowledgeNodes: "id, nodeType, sourceModule, sourceRecordId, createdAt, updatedAt",
+      knowledgeEdges: "id, sourceNodeId, targetNodeId, edgeType, createdAt",
+      knowledgeNotes: "id, createdAt, updatedAt",
+    }).upgrade(async (tx) => {
+      // 清空旧数据：数字主键与 UUID 字符串主键不兼容，无法转换
+      // 当前库里是测试数据，直接清空；若有真实数据需先导出备份
+      const tables = [
+        "todos", "notifications", "flashThoughts", "benchmarks", "topics",
+        "qaQuestions", "inspirations", "scriptTemplates", "productions",
+        "publishRecords", "tagLibrary", "trackingRecords", "reviewRecords",
+        "knowledgeNodes", "knowledgeEdges", "knowledgeNotes",
+      ] as const
+
+      for (const name of tables) {
+        await tx.table(name).clear()
+      }
+    })
+
+    // version 13：新增同步字段索引 + syncMeta 表
+    //
+    // 为支持云端同步（Turso），所有业务表新增三个同步字段：
+    //   synced（是否已同步）、updatedAt（最后更新时间）、syncVersion（乐观并发版本号）
+    // 这里把这三个字段加入索引，供同步层按 updatedAt 筛选增量、按 synced 筛选待同步项。
+    // 同时新增 syncMeta 表，记录最后同步时间。
+    //
+    // ⚠️ 同样不保留旧数据（同步字段不兼容），测试数据直接清空。
+    this.version(13).stores({
+      todos: "id, title, initialPriority, assignee, dueDate, status, source, creator, createdAt, completedAt, archived, synced, updatedAt, syncVersion",
+      notifications: "id, type, relatedModule, receiver, status, createdAt, synced, updatedAt, syncVersion",
+      flashThoughts: "id, status, categoryTarget, createdAt, processedAt, synced, updatedAt, syncVersion",
+      benchmarks: "id, status, assignee, sourceChannel, createdAt, synced, updatedAt, syncVersion",
+      topics: "id, status, source, priorityLevel, creator, createdAt, synced, updatedAt, syncVersion",
+      qaQuestions: "id, status, source, creator, createdAt, synced, updatedAt, syncVersion",
+      inspirations: "id, status, source, creator, createdAt, updatedAt, synced, syncVersion",
+      scriptTemplates: "id, frameworkType, creator, createdAt, updatedAt, synced, syncVersion",
+      productions: "id, mode, currentStage, status, assignee, createdAt, synced, updatedAt, syncVersion",
+      publishRecords: "id, productionId, status, assignee, createdAt, updatedAt, synced, syncVersion",
+      tagLibrary: "id, category, createdAt, synced, updatedAt, syncVersion",
+      trackingRecords: "id, publishRecordId, node, status, assignee, createdAt, updatedAt, synced, syncVersion",
+      reviewRecords: "id, type, status, assignee, createdAt, completedAt, synced, updatedAt, syncVersion",
+      knowledgeNodes: "id, nodeType, sourceModule, sourceRecordId, createdAt, updatedAt, synced, syncVersion",
+      knowledgeEdges: "id, sourceNodeId, targetNodeId, edgeType, createdAt, synced, syncVersion",
+      knowledgeNotes: "id, createdAt, updatedAt, synced, syncVersion",
+      syncMeta: "key",
+    }).upgrade(async (tx) => {
+      const tables = [
+        "todos", "notifications", "flashThoughts", "benchmarks", "topics",
+        "qaQuestions", "inspirations", "scriptTemplates", "productions",
+        "publishRecords", "tagLibrary", "trackingRecords", "reviewRecords",
+        "knowledgeNodes", "knowledgeEdges", "knowledgeNotes",
+      ] as const
+
+      for (const name of tables) {
+        await tx.table(name).clear()
+      }
     })
   }
 }

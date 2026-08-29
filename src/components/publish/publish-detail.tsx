@@ -26,7 +26,7 @@ import { Save, Check, Link2, Plus, X, Tag, FileText } from "lucide-react"
 
 // ========== 类型定义 ==========
 interface PublishDetailProps {
-  recordId: number | null
+  recordId: string | null
   open: boolean
   onOpenChange: (open: boolean) => void
   onUpdated?: () => void

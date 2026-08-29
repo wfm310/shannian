@@ -2,6 +2,7 @@
 // 封装所有闪念池操作，页面组件只调 API 不直接碰数据库
 
 import { db, type FlashThought, type FlashStatus, type CategoryTarget } from "./db"
+import { newId, newSyncFields } from "./id"
 import { toast } from "sonner"
 
 // 当前用户（和其他模块保持一致）
@@ -9,14 +10,16 @@ const CURRENT_USER = "峰岚"
 
 
 // ========== 1. 创建闪念 ==========
-export async function createFlashThought(content: string): Promise<number> {
+export async function createFlashThought(content: string): Promise<string> {
   const trimmed = content.trim()
   if (!trimmed) {
     toast.error("闪念内容不能为空")
     throw new Error("闪念内容不能为空")
   }
 
-  const id = await db.flashThoughts.add({
+  const id = newId()
+  await db.flashThoughts.add({
+    id,
     content: trimmed,
     status: "pending",
     categoryTarget: null,
@@ -24,6 +27,7 @@ export async function createFlashThought(content: string): Promise<number> {
     thought: null,
     createdAt: Date.now(),
     processedAt: null,
+    ...newSyncFields(),
   })
 
   toast.success("已记录 ✓")
@@ -51,7 +55,7 @@ export async function getFlashThoughts(params?: {
 
 
 // ========== 3. 获取单条 ==========
-export async function getFlashThought(id: number): Promise<FlashThought | undefined> {
+export async function getFlashThought(id: string): Promise<FlashThought | undefined> {
   return db.flashThoughts.get(id)
 }
 
@@ -60,10 +64,10 @@ export async function getFlashThought(id: number): Promise<FlashThought | undefi
 // 延迟状态变更：只保存归类目标和想法，不改状态
 // 状态在目标模块创建成功后由 markFlashThoughtLinked 确认
 export async function categorizeFlashThought(params: {
-  id: number
+  id: string
   target: CategoryTarget
   thought: string
-}): Promise<{ flashId: number; targetId: number | null }> {
+}): Promise<{ flashId: string; targetId: string | null }> {
   const thoughtTrimmed = params.thought.trim()
   if (!thoughtTrimmed) {
     toast.error("请填写你的想法")
@@ -87,9 +91,9 @@ export async function categorizeFlashThought(params: {
 // ========== 5. 转待办 ==========
 // 在今日待办创建一条记录，闪念状态改为已转待办
 export async function convertToTodo(params: {
-  id: number
+  id: string
   thought: string
-}): Promise<{ flashId: number; todoId: number }> {
+}): Promise<{ flashId: string; todoId: string }> {
   const thoughtTrimmed = params.thought.trim()
   if (!thoughtTrimmed) {
     toast.error("请填写你的想法")
@@ -112,7 +116,9 @@ export async function convertToTodo(params: {
   const dueDate = Date.now() + 7 * 24 * 60 * 60 * 1000
 
   // 在今日待办创建任务
-  const todoId = await db.todos.add({
+  const todoId = newId()
+  await db.todos.add({
+    id: todoId,
     title,
     description: flash.content,
     initialPriority: "P2",
@@ -129,18 +135,19 @@ export async function convertToTodo(params: {
     createdAt: Date.now(),
     completedAt: null,
     archived: false,
+    ...newSyncFields(),
   })
 
   // 更新闪念状态
   await db.flashThoughts.update(params.id, {
     status: "converted_todo",
-    relatedId: todoId as number,
+    relatedId: todoId,
     thought: thoughtTrimmed,
     processedAt: Date.now(),
   })
 
   toast.success("已转待办")
-  return { flashId: params.id, todoId: todoId as number }
+  return { flashId: params.id, todoId }
 }
 
 
@@ -164,7 +171,7 @@ export const statusConfig: Record<FlashStatus, { label: string; variant: "defaul
 // ========== 6. 回写关联 ID ==========
 // 其它模块（选题库/问答收集）创建成功后调用
 // 写入 relatedId 并确认状态为已归类（延迟状态变更的确认步骤）
-export async function markFlashThoughtLinked(flashId: number, targetId: number): Promise<void> {
+export async function markFlashThoughtLinked(flashId: string, targetId: string): Promise<void> {
   await db.flashThoughts.update(flashId, {
     relatedId: targetId,
     status: "categorized",

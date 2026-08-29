@@ -875,7 +875,7 @@ interface BenchmarkDetailProps {
   onNext: () => void
   onTransfer: () => void
   onConvert: () => void
-  onUpdate: (id: number, updates: Partial<Benchmark>) => void
+  onUpdate: (id: string, updates: Partial<Benchmark>) => void
 }
 
 export function BenchmarkDetail({

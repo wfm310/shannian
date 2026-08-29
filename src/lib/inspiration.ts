@@ -4,6 +4,7 @@
 
 // 导入数据库实例和类型
 import { db, type Inspiration, type InspirationStatus, type InspirationSource } from "./db"
+import { newId, newSyncFields, touchSyncFields } from "./id"
 // 导入 toast 提示
 import { toast } from "sonner"
 
@@ -14,7 +15,7 @@ const CURRENT_USER = "峰岚"
 // ========== 工具函数：计算状态 ==========
 // 根据结论是否为空 + 是否转选题，自动计算状态
 // 规则：有 topicId → converted；有结论 → completed；无结论 → draft
-function calcStatus(conclusion: string, topicId: number | null): InspirationStatus {
+function calcStatus(conclusion: string, topicId: string | null): InspirationStatus {
   if (topicId) return "converted"
   if (conclusion.trim()) return "completed"
   return "draft"
@@ -29,8 +30,8 @@ export async function createInspiration(params: {
   thoughtProcess?: string
   conclusion?: string
   source?: InspirationSource
-  sourceId?: number | null
-}): Promise<number> {
+  sourceId?: string | null
+}): Promise<string> {
   const contentTrimmed = params.content.trim()
   if (!contentTrimmed) {
     toast.error("灵感内容不能为空")
@@ -44,7 +45,9 @@ export async function createInspiration(params: {
   // 根据结论自动计算初始状态
   const status = calcStatus(conclusion, null)
 
-  const id = await db.inspirations.add({
+  const id = newId()
+  await db.inspirations.add({
+    id,
     content: contentTrimmed,
     thoughtProcess: params.thoughtProcess?.trim() || "",
     conclusion,
@@ -54,11 +57,12 @@ export async function createInspiration(params: {
     creator: CURRENT_USER,
     topicId: null,
     createdAt: now,
+    ...newSyncFields(),
     updatedAt: now,
   })
 
   toast.success("灵感已创建")
-  return id as number
+  return id
 }
 
 
@@ -82,7 +86,7 @@ export async function getInspirations(params?: {
 
 
 // ========== 3. 获取单条灵感 ==========
-export async function getInspiration(id: number): Promise<Inspiration | undefined> {
+export async function getInspiration(id: string): Promise<Inspiration | undefined> {
   return db.inspirations.get(id)
 }
 
@@ -90,7 +94,7 @@ export async function getInspiration(id: number): Promise<Inspiration | undefine
 // ========== 4. 更新灵感 ==========
 // 可以修改 content / thoughtProcess / conclusion
 // 状态会根据结论自动重新计算
-export async function updateInspiration(id: number, params: {
+export async function updateInspiration(id: string, params: {
   content?: string
   thoughtProcess?: string
   conclusion?: string
@@ -116,30 +120,32 @@ export async function updateInspiration(id: number, params: {
       current.topicId
     )
   }
-  updates.updatedAt = Date.now()
-
-  await db.inspirations.update(id, updates)
+  const merged = { ...current, ...updates }
+  await db.inspirations.update(id, {
+    ...updates,
+    ...touchSyncFields(current.syncVersion || 0),
+  })
   toast.success("已保存")
 }
 
 
 // ========== 5. 标记选题已创建 ==========
 // 转选题成功后调用，把选题 ID 写入灵感记录
-export async function markTopicCreated(inspirationId: number, topicId: number): Promise<void> {
+export async function markTopicCreated(inspirationId: string, topicId: string): Promise<void> {
   const current = await db.inspirations.get(inspirationId)
   if (!current) return
 
   await db.inspirations.update(inspirationId, {
     topicId,
     status: "converted",
-    updatedAt: Date.now(),
+    ...touchSyncFields(current.syncVersion || 0),
   })
 }
 
 
 // ========== 6. 闪念池联动 - 回写关联 ==========
 // 灵感创建成功后调用，把灵感 ID 写入闪念的 relatedId
-export async function markFlashThoughtLinked(flashId: number, inspirationId: number): Promise<void> {
+export async function markFlashThoughtLinked(flashId: string, inspirationId: string): Promise<void> {
   await db.flashThoughts.update(flashId, {
     relatedId: inspirationId,
     status: "categorized",

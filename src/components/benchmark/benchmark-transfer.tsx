@@ -20,7 +20,7 @@ import { toast } from "sonner"
 interface BenchmarkTransferProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  benchmarkId: number | null     // 要转让的对标记录 ID
+  benchmarkId: string | null     // 要转让的对标记录 ID
   currentAssignee: string        // 当前负责人
   currentUser: string            // 当前操作人
   onTransferred?: () => void     // 转让成功后的回调

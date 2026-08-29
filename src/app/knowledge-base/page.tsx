@@ -32,8 +32,8 @@ export default function KnowledgeBasePage() {
 
   // ----- 图谱数据 -----
   const [graphData, setGraphData] = useState<{
-    nodes: { id: number; label: string; type: any; tags: string[] }[]
-    edges: { source: number; target: number; type: any }[]
+    nodes: { id: string; label: string; type: any; tags: string[] }[]
+    edges: { source: string; target: string; type: any }[]
   } | null>(null)
 
   // ----- 详情面板 -----
@@ -88,7 +88,7 @@ export default function KnowledgeBasePage() {
   }
 
   // ---------- 点击节点 ----------
-  const handleNodeClick = useCallback(async (nodeId: number) => {
+  const handleNodeClick = useCallback(async (nodeId: string) => {
     const node = await getNode(nodeId)
     if (node) {
       setDetailNode(node)

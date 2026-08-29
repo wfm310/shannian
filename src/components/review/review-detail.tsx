@@ -2,6 +2,7 @@
 
 // ========== 导入区域 ==========
 import { useState, useEffect } from "react"
+import { newId } from "@/lib/id"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -34,16 +35,15 @@ import {
 
 // ========== 类型定义 ==========
 interface ReviewDetailProps {
-  recordId: number | null
+  recordId: string | null
   open: boolean
   onOpenChange: (open: boolean) => void
   onUpdated?: () => void
 }
 
 // 条目 ID 生成器
-let itemIdCounter = Date.now()
-function nextItemId(): number {
-  return ++itemIdCounter
+function nextItemId(): string {
+  return newId()
 }
 
 
@@ -191,16 +191,16 @@ export function ReviewDetail({
     }])
   }
 
-  function removeGoodItem(id: number) {
+  function removeGoodItem(id: string) {
     setGoodItems(prev => prev.filter(i => i.id !== id))
   }
-  function removeBadItem(id: number) {
+  function removeBadItem(id: string) {
     setBadItems(prev => prev.filter(i => i.id !== id))
   }
-  function removeExperience(id: number) {
+  function removeExperience(id: string) {
     setExperiences(prev => prev.filter(i => i.id !== id))
   }
-  function removeAction(id: number) {
+  function removeAction(id: string) {
     setActions(prev => prev.filter(i => i.id !== id))
   }
 
@@ -572,8 +572,8 @@ function ItemSection({
   items: ReviewItem[]
   isEditing: boolean
   onAdd: () => void
-  onRemove: (id: number) => void
-  onUpdate: (id: number, field: "dimension" | "description", value: string) => void
+  onRemove: (id: string) => void
+  onUpdate: (id: string, field: "dimension" | "description", value: string) => void
 }) {
   return (
     <div className="space-y-3">

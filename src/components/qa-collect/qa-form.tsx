@@ -31,7 +31,7 @@ interface QaFormProps {
   onOpenChange: (open: boolean) => void              // 控制弹窗开关
   prefillContent?: string                            // 从闪念池联动预填的问题内容
   prefillAnswer?: string                             // 从闪念池联动预填的答案（归类的想法）
-  onCreated?: (id: number) => void                   // 创建成功回调，传回新问答 ID
+  onCreated?: (id: string) => void                   // 创建成功回调，传回新问答 ID
 }
 
 

@@ -2,6 +2,7 @@
 // 提供追踪记录的 CRUD 操作、节点配置、参与度计算等功能
 
 import { db, type TrackingRecord, type TrackingNode, type TrackingStatus, type PublishRecord } from "./db"
+import { newId, newSyncFields, touchSyncFields } from "./id"
 import { sendNotification } from "./notification"
 import { toast } from "sonner"
 
@@ -43,8 +44,8 @@ export const statusLabels: Record<TrackingStatus, string> = {
 // ========== 1. 从发布记录创建追踪（创建 5 个固定节点） ==========
 
 export async function createTrackingFromPublish(
-  publishRecordId: number
-): Promise<number[]> {
+  publishRecordId: string
+): Promise<string[]> {
   // 检查发布记录是否存在且已发布
   const pub = await db.publishRecords.get(publishRecordId)
   if (!pub) {
@@ -75,6 +76,7 @@ export async function createTrackingFromPublish(
     fixedNodeOrder.map(node => {
       const config = trackingNodeConfig[node]
       return db.trackingRecords.add({
+        id: newId(),
         publishRecordId,
         node,
         customLabel: "",
@@ -95,6 +97,7 @@ export async function createTrackingFromPublish(
         recordedAt: null,
         assignee: CURRENT_USER,
         createdAt: now,
+        ...newSyncFields(),
         updatedAt: now,
       })
     })
@@ -111,7 +114,7 @@ export async function createTrackingFromPublish(
   })
 
   toast.success("追踪记录已创建")
-  return ids as number[]
+  return ids as string[]
 }
 
 
@@ -135,7 +138,7 @@ export async function getTrackingRecords(
 
 // ========== 3. 获取单条追踪记录 ==========
 
-export async function getTrackingRecord(id: number): Promise<TrackingRecord | undefined> {
+export async function getTrackingRecord(id: string): Promise<TrackingRecord | undefined> {
   return db.trackingRecords.get(id)
 }
 
@@ -143,7 +146,7 @@ export async function getTrackingRecord(id: number): Promise<TrackingRecord | un
 // ========== 4. 更新追踪记录（录入数据） ==========
 
 export async function updateTrackingRecord(
-  id: number,
+  id: string,
   updates: Partial<TrackingRecord>
 ): Promise<void> {
   const record = await db.trackingRecords.get(id)
@@ -163,7 +166,7 @@ export async function updateTrackingRecord(
     ...updates,
     status: newStatus,
     recordedAt: wasPending && hasData ? now : record.recordedAt,
-    updatedAt: now,
+    ...touchSyncFields(record.syncVersion || 0),
   })
 }
 
@@ -175,9 +178,9 @@ export async function updateTrackingRecord(
 // 录入错误的数据不做删除，保留沉淀
 
 export async function addCustomTracking(
-  publishRecordId: number,
+  publishRecordId: string,
   label: string
-): Promise<number> {
+): Promise<string> {
   const trimmed = label.trim()
   if (!trimmed) {
     toast.error("请输入节点标签")
@@ -185,7 +188,9 @@ export async function addCustomTracking(
   }
 
   const now = Date.now()
-  const id = await db.trackingRecords.add({
+  const id = newId()
+  await db.trackingRecords.add({
+    id,
     publishRecordId,
     node: "custom",
     customLabel: trimmed,
@@ -206,11 +211,12 @@ export async function addCustomTracking(
     recordedAt: null,
     assignee: CURRENT_USER,
     createdAt: now,
+    ...newSyncFields(),
     updatedAt: now,
   })
 
   toast.success("长尾追踪节点已添加")
-  return id as number
+  return id
 }
 
 
@@ -235,7 +241,7 @@ export async function getPendingPublishRecords(): Promise<PublishRecord[]> {
 // ========== 8. 获取同一发布记录的所有追踪记录 ==========
 
 export async function getTrackingByPublish(
-  publishRecordId: number
+  publishRecordId: string
 ): Promise<TrackingRecord[]> {
   return db.trackingRecords
     .where("publishRecordId")
@@ -282,8 +288,8 @@ export function calculateRates(record: TrackingRecord): {
 // ========== 10. 按视频分组追踪记录 ==========
 
 // 将追踪记录按发布记录ID分组，返回每条视频的所有节点数据
-export function groupByVideo(records: TrackingRecord[]): Map<number, TrackingRecord[]> {
-  const map = new Map<number, TrackingRecord[]>()
+export function groupByVideo(records: TrackingRecord[]): Map<string, TrackingRecord[]> {
+  const map = new Map<string, TrackingRecord[]>()
   for (const r of records) {
     const list = map.get(r.publishRecordId) || []
     list.push(r)
@@ -345,7 +351,7 @@ export function calculateKPI(records: TrackingRecord[]): {
 // ========== 12. 获取视频概览列表（表格用） ==========
 
 export interface VideoOverview {
-  publishRecordId: number
+  publishRecordId: string
   title: string
   publishTime: number
   nodes: TrackingRecord[]
@@ -366,7 +372,7 @@ export async function getVideoOverviews(): Promise<VideoOverview[]> {
   const grouped = groupByVideo(allRecords)
   const pubIds = [...grouped.keys()]
   const pubs = await Promise.all(pubIds.map(id => db.publishRecords.get(id)))
-  const pubMap = new Map<number, { title: string; publishTime: number }>()
+  const pubMap = new Map<string, { title: string; publishTime: number }>()
   pubs.forEach(p => {
     if (p?.id) pubMap.set(p.id, { title: p.title, publishTime: p.publishTime || p.createdAt })
   })

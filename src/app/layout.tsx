@@ -10,12 +10,24 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import { ToasterProvider } from "@/components/toaster-provider"
 // 全局闪念快记（快捷键 N 唤出）
 import { QuickFlashThought } from "@/components/quick-flash-thought"
+// PWA Service Worker 注册（仅生产环境生效）
+import { SWRegister } from "@/components/sw-register"
 
 
 // ========== 元数据配置 ==========
 export const metadata: Metadata = {
   title: "闪念 Pro - 创作者的第二大脑",
   description: "记录你一闪而过的想法，从灵感到爆款的创作旅程",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "闪念Pro",
+  },
+  icons: {
+    icon: "/icon-192.svg",
+    apple: "/icon-192.svg",
+  },
 }
 
 export const viewport: Viewport = {
@@ -24,6 +36,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
+  themeColor: "#6366f1",
 }
 
 
@@ -49,6 +62,7 @@ export default function RootLayout({
           <ToasterProvider />
           <QuickFlashThought />
           <ResponsiveLayout>{children}</ResponsiveLayout>
+          <SWRegister />
         </TooltipProvider>
       </body>
     </html>

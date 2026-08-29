@@ -2,6 +2,7 @@
 // 提供任务的 CRUD 操作、阶段推进、框架关联等功能
 
 import { db, type ProductionTask, type ProductionMode, type ProductionStage, type ProductionStatus, type ScriptStepContent, type ScriptStep } from "./db"
+import { newId, newSyncFields, touchSyncFields } from "./id"
 import { sendNotification } from "./notification"
 import { syncProductionProgressToTodos } from "./progress-events"
 import { toast } from "sonner"
@@ -43,8 +44,8 @@ export const modeLabels: Record<ProductionMode, string> = {
 
 export async function createProductionTask(
   mode: ProductionMode,
-  topicId?: number
-): Promise<number> {
+  topicId?: string
+): Promise<string> {
   let title = ""
   let pendingStages: string[] = []
 
@@ -62,7 +63,7 @@ export async function createProductionTask(
     // 任务标题继承选题标题
     title = topic.topicTitle
     // 更新选题状态为"生产中"
-    await db.topics.update(topicId, { status: "in_production" })
+    await db.topics.update(topicId, { status: "in_production", ...touchSyncFields(topic.syncVersion || 0) })
     pendingStages = []
   } else {
     // 即兴模式：标题默认"即兴创作"，首次保存文案时自动更新
@@ -74,7 +75,9 @@ export async function createProductionTask(
   const startingStage = mode === "standard" ? "topic" : "script"
   const startingStageIndex = stageOrder.indexOf(startingStage)
 
-  const id = await db.productions.add({
+  const id = newId()
+  await db.productions.add({
+    id,
     title,
     mode,
     topicId: topicId || null,
@@ -87,6 +90,7 @@ export async function createProductionTask(
     assignee: CURRENT_USER,
     createdAt: now,
     publishedAt: null,
+    ...newSyncFields(),
   })
 
   // 创建关联进度的待办（一条任务对应一条待办）
@@ -101,12 +105,12 @@ export async function createProductionTask(
     title: "新建生产任务",
     content: `${title}（${modeLabels[mode]}）`,
     relatedModule: "production",
-    relatedId: id as number,
+    relatedId: id,
     receiver: CURRENT_USER,
   })
 
   toast.success("生产任务已创建")
-  return id as number
+  return id
 }
 
 
@@ -130,7 +134,7 @@ export async function getProductionTasks(
 
 // ========== 3. 获取单条任务 ==========
 
-export async function getProductionTask(id: number): Promise<ProductionTask | undefined> {
+export async function getProductionTask(id: string): Promise<ProductionTask | undefined> {
   return db.productions.get(id)
 }
 
@@ -138,7 +142,7 @@ export async function getProductionTask(id: number): Promise<ProductionTask | un
 // ========== 4. 更新任务 ==========
 
 export async function updateProductionTask(
-  id: number,
+  id: string,
   updates: Partial<ProductionTask>
 ): Promise<void> {
   const task = await db.productions.get(id)
@@ -152,13 +156,13 @@ export async function updateProductionTask(
     }
   }
 
-  await db.productions.update(id, updates)
+  await db.productions.update(id, { ...updates, ...touchSyncFields(task.syncVersion || 0) })
 }
 
 
 // ========== 5. 推进到下一阶段 ==========
 
-export async function advanceStage(id: number): Promise<void> {
+export async function advanceStage(id: string): Promise<void> {
   const task = await db.productions.get(id)
   if (!task) {
     toast.error("任务不存在")
@@ -192,11 +196,14 @@ export async function advanceStage(id: number): Promise<void> {
     updates.status = "completed"
     // 更新选题状态为"已发布"
     if (task.topicId) {
-      await db.topics.update(task.topicId, { status: "published" })
+      const topic = await db.topics.get(task.topicId)
+      if (topic) {
+        await db.topics.update(task.topicId, { status: "published", ...touchSyncFields(topic.syncVersion || 0) })
+      }
     }
   }
 
-  await db.productions.update(id, updates)
+  await db.productions.update(id, { ...updates, ...touchSyncFields(task.syncVersion || 0) })
 
   // 同步进度到待办
   await syncProductionProgressToTodos()
@@ -217,7 +224,7 @@ export async function advanceStage(id: number): Promise<void> {
 
 // ========== 5b. 返回上一阶段 ==========
 
-export async function goBackStage(id: number): Promise<void> {
+export async function goBackStage(id: string): Promise<void> {
   const task = await db.productions.get(id)
   if (!task) {
     toast.error("任务不存在")
@@ -237,7 +244,7 @@ export async function goBackStage(id: number): Promise<void> {
   }
 
   const prevStage = stageOrder[stageIndex - 1]
-  await db.productions.update(id, { currentStage: prevStage })
+  await db.productions.update(id, { currentStage: prevStage, ...touchSyncFields(task.syncVersion || 0) })
 
   // 同步进度到待办
   await syncProductionProgressToTodos()
@@ -249,8 +256,8 @@ export async function goBackStage(id: number): Promise<void> {
 // ========== 6. 关联框架（初始化步骤文案） ==========
 
 export async function selectFramework(
-  taskId: number,
-  frameworkId: number
+  taskId: string,
+  frameworkId: string
 ): Promise<void> {
   const framework = await db.scriptTemplates.get(frameworkId)
   if (!framework) {
@@ -275,6 +282,7 @@ export async function selectFramework(
     frameworkId,
     scriptSteps,
     pendingStages: newPending,
+    ...touchSyncFields(task.syncVersion || 0),
   })
 
   toast.success("框架已关联")
@@ -284,7 +292,7 @@ export async function selectFramework(
 // ========== 7. 即兴模式：创建并关联新选题 ==========
 
 export async function createAndLinkTopic(
-  taskId: number,
+  taskId: string,
   topicTitle: string,
   rawContent: string
 ): Promise<void> {
@@ -296,7 +304,9 @@ export async function createAndLinkTopic(
 
   const now = Date.now()
   // 创建最小选题（用户后续可在选题库补充详细信息）
-  const topicId = await db.topics.add({
+  const topicId = newId()
+  await db.topics.add({
+    id: topicId,
     topicTitle: trimmed,
     topicNote: "",
     creator: CURRENT_USER,
@@ -315,6 +325,7 @@ export async function createAndLinkTopic(
     priorityScore: 0,
     priorityLevel: "reserve",
     status: "in_production",
+    ...newSyncFields(),
     updatedAt: now,
   })
 
@@ -324,8 +335,9 @@ export async function createAndLinkTopic(
 
   const newPending = task.pendingStages.filter(s => s !== "topic")
   await db.productions.update(taskId, {
-    topicId: topicId as number,
+    topicId: topicId,
     pendingStages: newPending,
+    ...touchSyncFields(task.syncVersion || 0),
   })
 
   toast.success("选题已创建并关联")
@@ -364,5 +376,6 @@ async function createProductionTodo(
     createdAt: Date.now(),
     completedAt: null,
     archived: false,
+    ...newSyncFields(),
   })
 }

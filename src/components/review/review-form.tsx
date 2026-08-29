@@ -25,7 +25,7 @@ import { Check, FileSearch } from "lucide-react"
 interface ReviewFormProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onCreated?: (id: number) => void
+  onCreated?: (id: string) => void
 }
 
 
@@ -33,7 +33,7 @@ interface ReviewFormProps {
 export function ReviewForm({ open, onOpenChange, onCreated }: ReviewFormProps) {
   const [reviewType, setReviewType] = useState<ReviewType>("single")
   const [publishRecords, setPublishRecords] = useState<PublishRecord[]>([])
-  const [selectedPubId, setSelectedPubId] = useState<number | null>(null)
+  const [selectedPubId, setSelectedPubId] = useState<string | null>(null)
   const [period, setPeriod] = useState<ReviewPeriod>("daily")
   const [periodDate, setPeriodDate] = useState<string>("")
   const [isLoading, setIsLoading] = useState(false)

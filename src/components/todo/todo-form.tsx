@@ -3,6 +3,7 @@
 // ========== 导入区域 ==========
 import { useState, useEffect } from "react"
 import { db, type Todo, type Priority } from "@/lib/db"
+import { newId, newSyncFields } from "@/lib/id"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -222,10 +223,11 @@ export function TodoForm({ open, onOpenChange }: TodoFormProps) {
       createdAt: now,
       completedAt: null,
       archived: false,
+      ...newSyncFields(),
     }
 
     // 6. 保存到数据库
-    const newId = await db.todos.add(todoData)
+    const createdId = await db.todos.add(todoData)
     toast.success("任务已创建，已发送给负责人")
 
     // 7. 给负责人发通知
@@ -234,7 +236,7 @@ export function TodoForm({ open, onOpenChange }: TodoFormProps) {
       title: "你有一条新待办任务",
       content: `${assignee} 给你分配了任务：${title.trim()}`,
       relatedModule: "todo",
-      relatedId: newId as number,
+      relatedId: newId(),
       receiver: assignee,
     })
 

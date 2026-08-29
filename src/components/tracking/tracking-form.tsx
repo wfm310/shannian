@@ -20,14 +20,14 @@ import { Check, BarChart3 } from "lucide-react"
 interface TrackingFormProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onCreated?: (ids: number[]) => void
+  onCreated?: (ids: string[]) => void
 }
 
 
 // ========== 组件定义 ==========
 export function TrackingForm({ open, onOpenChange, onCreated }: TrackingFormProps) {
   const [pendingRecords, setPendingRecords] = useState<PublishRecord[]>([])
-  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
 

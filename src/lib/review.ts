@@ -7,6 +7,7 @@ import {
   type ExperienceCategory, type ReviewItem, type ReviewExperience,
   type ReviewAction, type Priority, type PublishRecord,
 } from "./db"
+import { newId, newSyncFields, touchSyncFields } from "./id"
 import { sendNotification } from "./notification"
 import { getTrackingByPublish, calculateRates, trackingNodeConfig } from "./tracking"
 import { toast } from "sonner"
@@ -69,12 +70,12 @@ export const actionLinkedModules = [
 export async function createReview(
   type: ReviewType,
   options: {
-    publishRecordId?: number
+    publishRecordId?: string
     period?: ReviewPeriod
     periodStart?: number
     periodEnd?: number
   }
-): Promise<number> {
+): Promise<string> {
   let title = ""
 
   if (type === "single") {
@@ -97,7 +98,9 @@ export async function createReview(
   }
 
   const now = Date.now()
-  const id = await db.reviewRecords.add({
+  const id = newId()
+  await db.reviewRecords.add({
+    id,
     title,
     type,
     period: options.period || null,
@@ -116,6 +119,7 @@ export async function createReview(
     startedAt: null,
     completedAt: null,
     createdAt: now,
+    ...newSyncFields(),
     updatedAt: now,
   })
 
@@ -128,7 +132,7 @@ export async function createReview(
     dueDate: now + 3 * 24 * 60 * 60 * 1000,
     linkedModules: ["review"],
     progressTargets: { review: 1 },
-    linkedIds: { review: [id as number] },
+    linkedIds: { review: [id] },
     progressCompleted: { review: 0 },
     progressBaseline: { review: 0 },
     status: "pending",
@@ -137,6 +141,7 @@ export async function createReview(
     createdAt: now,
     completedAt: null,
     archived: false,
+    ...newSyncFields(),
   })
 
   // 发送通知
@@ -145,12 +150,12 @@ export async function createReview(
     title: "新建复盘记录",
     content: title,
     relatedModule: "review",
-    relatedId: id as number,
+    relatedId: id,
     receiver: CURRENT_USER,
   })
 
   toast.success("复盘记录已创建")
-  return id as number
+  return id
 }
 
 
@@ -178,7 +183,7 @@ export async function getReviewRecords(
 
 // ========== 3. 获取单条复盘记录 ==========
 
-export async function getReviewRecord(id: number): Promise<ReviewRecord | undefined> {
+export async function getReviewRecord(id: string): Promise<ReviewRecord | undefined> {
   return db.reviewRecords.get(id)
 }
 
@@ -186,7 +191,7 @@ export async function getReviewRecord(id: number): Promise<ReviewRecord | undefi
 // ========== 4. 更新复盘记录 ==========
 
 export async function updateReviewRecord(
-  id: number,
+  id: string,
   updates: Partial<ReviewRecord>
 ): Promise<void> {
   const record = await db.reviewRecords.get(id)
@@ -194,14 +199,14 @@ export async function updateReviewRecord(
 
   await db.reviewRecords.update(id, {
     ...updates,
-    updatedAt: Date.now(),
+    ...touchSyncFields(record.syncVersion || 0),
   })
 }
 
 
 // ========== 5. 开始复盘（待复盘 → 复盘中） ==========
 
-export async function startReview(id: number): Promise<void> {
+export async function startReview(id: string): Promise<void> {
   const record = await db.reviewRecords.get(id)
   if (!record) return
 
@@ -210,14 +215,14 @@ export async function startReview(id: number): Promise<void> {
   await db.reviewRecords.update(id, {
     status: "in_progress",
     startedAt: Date.now(),
-    updatedAt: Date.now(),
+    ...touchSyncFields(record.syncVersion || 0),
   })
 }
 
 
 // ========== 6. 完成复盘（复盘中 → 已完成） ==========
 
-export async function completeReview(id: number): Promise<void> {
+export async function completeReview(id: string): Promise<void> {
   const record = await db.reviewRecords.get(id)
   if (!record) {
     toast.error("复盘记录不存在")
@@ -260,7 +265,7 @@ export async function completeReview(id: number): Promise<void> {
   await db.reviewRecords.update(id, {
     status: "completed",
     completedAt: now,
-    updatedAt: now,
+    ...touchSyncFields(record.syncVersion || 0),
   })
 
   // 自动完成复盘待办
@@ -272,6 +277,7 @@ export async function completeReview(id: number): Promise<void> {
       await db.todos.update(todo.id, {
         status: "done",
         completedAt: now,
+        ...touchSyncFields(todo.syncVersion || 0),
       })
     }
   }
@@ -295,6 +301,7 @@ export async function completeReview(id: number): Promise<void> {
       createdAt: now,
       completedAt: null,
       archived: false,
+      ...newSyncFields(),
     })
   }
 

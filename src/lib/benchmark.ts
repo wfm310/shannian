@@ -3,6 +3,7 @@
 // 页面组件只调用这里的函数，不直接操作数据库
 
 import { db, type Benchmark, type BenchmarkStatus, type StructureType } from "@/lib/db"
+import { newId, newSyncFields } from "./id"
 import { syncBenchmarkProgressToTodos } from "./progress-events"
 
 // ========== 配置 ==========
@@ -163,6 +164,7 @@ function createDefaultBenchmark(
     createdAt: Date.now(),
     convertedTargets: [],
     convertedIds: {},
+    ...newSyncFields(),
   }
 }
 
@@ -234,7 +236,7 @@ export async function createBenchmark(data: {
   sourceChannel: string
   videoScript: string
   assignee: string
-}): Promise<number> {
+}): Promise<string> {
   const benchmark = createDefaultBenchmark(
     data.title,
     data.videoUrl,
@@ -242,10 +244,11 @@ export async function createBenchmark(data: {
     data.videoScript,
     data.assignee
   )
-  const id = await db.benchmarks.add(benchmark as any)
+  const id = newId()
+  await db.benchmarks.add({ id, ...benchmark } as any)
   // 新建了对标记录，通知待办刷新
   syncBenchmarkProgressToTodos()
-  return id as number
+  return id
 }
 
 
@@ -276,7 +279,7 @@ export async function getBenchmarks(status?: BenchmarkStatus): Promise<Benchmark
  * @param id - 记录 id
  * @returns 对标记录，找不到返回 undefined
  */
-export async function getBenchmark(id: number): Promise<Benchmark | undefined> {
+export async function getBenchmark(id: string): Promise<Benchmark | undefined> {
   return await db.benchmarks.get(id)
 }
 
@@ -288,7 +291,7 @@ export async function getBenchmark(id: number): Promise<Benchmark | undefined> {
  * @param updates - 要更新的字段对象
  */
 export async function updateBenchmark(
-  id: number,
+  id: string,
   updates: Partial<Benchmark>
 ): Promise<void> {
   // 先获取当前记录
@@ -308,7 +311,7 @@ export async function updateBenchmark(
  * 开始拆解（状态从"待拆解"变"拆解中"）
  * @param id - 记录 id
  */
-export async function startDisassembly(id: number): Promise<void> {
+export async function startDisassembly(id: string): Promise<void> {
   const current = await db.benchmarks.get(id)
   if (!current) return
   if (current.status !== "pending") return
@@ -329,7 +332,7 @@ export async function startDisassembly(id: number): Promise<void> {
  * @param currentUser - 当前操作人（用于校验是不是当前负责人）
  */
 export async function transferAssignee(
-  id: number,
+  id: string,
   newAssignee: string,
   currentUser: string
 ): Promise<void> {
@@ -359,13 +362,13 @@ export async function transferAssignee(
  * @returns 转化结果（包含生成的 id）
  */
 export async function convertBenchmark(
-  id: number,
+  id: string,
   targets: string[]
-): Promise<{ topicId?: number; inspirationId?: number }> {
+): Promise<{ topicId?: string; inspirationId?: string }> {
   const current = await db.benchmarks.get(id)
   if (!current) return {}
 
-  const result: { topicId?: number; inspirationId?: number } = {}
+  const result: { topicId?: string; inspirationId?: string } = {}
 
   // TODO：选题库和灵感记录模块开发后，在这里创建对应记录
   // 目前先更新状态和 convertedTargets，跳转带参数
@@ -387,7 +390,7 @@ export async function convertBenchmark(
  * @param benchmarkId - 对标记录 ID
  * @param topicId - 新创建的选题 ID
  */
-export async function markTopicCreated(benchmarkId: number, topicId: number): Promise<void> {
+export async function markTopicCreated(benchmarkId: string, topicId: string): Promise<void> {
   const current = await db.benchmarks.get(benchmarkId)
   if (!current) return
   await db.benchmarks.update(benchmarkId, {
@@ -400,7 +403,7 @@ export async function markTopicCreated(benchmarkId: number, topicId: number): Pr
  * @param benchmarkId - 对标记录 ID
  * @param inspirationId - 新创建的灵感 ID
  */
-export async function markInspirationCreated(benchmarkId: number, inspirationId: number): Promise<void> {
+export async function markInspirationCreated(benchmarkId: string, inspirationId: string): Promise<void> {
   const current = await db.benchmarks.get(benchmarkId)
   if (!current) return
   await db.benchmarks.update(benchmarkId, {
@@ -414,11 +417,12 @@ export async function markInspirationCreated(benchmarkId: number, inspirationId:
  * @param assignee - 负责人
  * @returns 新记录的 id
  */
-export async function quickCreateBenchmark(title: string, assignee: string): Promise<number> {
+export async function quickCreateBenchmark(title: string, assignee: string): Promise<string> {
   const benchmark = createDefaultBenchmark(title, "", "recommend", "", assignee)
-  const id = await db.benchmarks.add(benchmark as any)
+  const id = newId()
+  await db.benchmarks.add({ id, ...benchmark } as any)
   syncBenchmarkProgressToTodos()
-  return id as number
+  return id
 }
 
 /**
@@ -426,7 +430,7 @@ export async function quickCreateBenchmark(title: string, assignee: string): Pro
  * @param ids - 要更新的记录 id 列表
  * @param updates - 要更新的字段
  */
-export async function batchUpdateBenchmarks(ids: number[], updates: Partial<Benchmark>): Promise<void> {
+export async function batchUpdateBenchmarks(ids: string[], updates: Partial<Benchmark>): Promise<void> {
   await db.transaction('rw', db.benchmarks, async () => {
     for (const id of ids) {
       await db.benchmarks.update(id, updates as any)

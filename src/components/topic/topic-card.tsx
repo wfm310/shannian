@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils"
 
 interface TopicCardProps {
   topic: Topic
-  onOpen: (id: number) => void
+  onOpen: (id: string) => void
 }
 
 export function TopicCard({ topic, onOpen }: TopicCardProps) {

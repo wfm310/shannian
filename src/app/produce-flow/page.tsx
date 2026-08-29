@@ -35,7 +35,7 @@ export default function ProduceFlowPage() {
   const [formOpen, setFormOpen] = useState(false)
 
   // ----- 详情状态 -----
-  const [detailTaskId, setDetailTaskId] = useState<number | null>(null)
+  const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
 
 

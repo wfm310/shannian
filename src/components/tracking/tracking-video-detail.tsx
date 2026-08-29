@@ -30,7 +30,7 @@ import {
 interface TrackingVideoDetailProps {
   overview: VideoOverview
   onBack: () => void
-  onEditNode: (recordId: number) => void
+  onEditNode: (recordId: string) => void
   onAddLongTail: () => void
 }
 

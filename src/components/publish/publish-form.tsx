@@ -21,14 +21,14 @@ import { Check, UploadCloud } from "lucide-react"
 interface PublishFormProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onCreated?: (id: number) => void
+  onCreated?: (id: string) => void
 }
 
 
 // ========== 组件定义 ==========
 export function PublishForm({ open, onOpenChange, onCreated }: PublishFormProps) {
   const [pendingTasks, setPendingTasks] = useState<ProductionTask[]>([])
-  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
 

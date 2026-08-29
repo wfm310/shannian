@@ -10,7 +10,7 @@ import { qaStatusConfig, qaSourceConfig } from "@/lib/qa-collect"
 // ========== 类型定义 ==========
 interface QaCardProps {
   question: QaQuestion           // 问答数据
-  onOpen: (id: number) => void     // 点击卡片时调用，传入问答 ID
+  onOpen: (id: string) => void     // 点击卡片时调用，传入问答 ID
 }
 
 

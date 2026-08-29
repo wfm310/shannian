@@ -70,7 +70,7 @@ function QaCollectPage() {
   // ----- 闪念池联动跟踪 -----
   // flashLinkRef：记录闪念 ID 和内容，创建成功后用来回写关联
   // flashLinkedRef：标记是否已成功创建（关闭弹窗时判断是发成功通知还是失败通知）
-  const flashLinkRef = useRef<{ flashId: number; content: string } | null>(null)
+  const flashLinkRef = useRef<{ flashId: string; content: string } | null>(null)
   const flashLinkedRef = useRef(false)
 
 
@@ -108,11 +108,11 @@ function QaCollectPage() {
       flashLinkedRef.current = false
 
       // 解析闪念 ID
-      const flashId = flashIdStr ? parseInt(flashIdStr, 10) : 0
+      const flashId = flashIdStr ?? ""
 
       // 记录联动信息
       flashLinkRef.current = {
-        flashId: isNaN(flashId) ? 0 : flashId,
+        flashId,
         content: decodeURIComponent(content),
       }
 
@@ -134,8 +134,8 @@ function QaCollectPage() {
     if (isLoading) return
     const idStr = searchParams.get("id")
     if (idStr) {
-      const id = parseInt(idStr, 10)
-      if (!isNaN(id)) {
+      const id = idStr
+      if (id) {
         getQuestion(id).then(q => {
           if (q) {
             setDetailQuestion(q)
@@ -150,7 +150,7 @@ function QaCollectPage() {
 
   // ----- 新建成功回调 -----
   // 闪念池联动时，创建成功后回写关联 + 发成功通知
-  function handleCreated(id: number) {
+  function handleCreated(id: string) {
     flashLinkedRef.current = true
 
     // 如果是闪念池联动，回写关联并发通知
@@ -209,7 +209,7 @@ function QaCollectPage() {
 
 
   // ----- 打开详情 -----
-  function handleOpenDetail(id: number) {
+  function handleOpenDetail(id: string) {
     getQuestion(id).then(q => {
       if (q) {
         setDetailQuestion(q)

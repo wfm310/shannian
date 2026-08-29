@@ -30,7 +30,7 @@ const NODE_COLORS: Record<KnowledgeNodeType, string> = {
 
 // ========== 内部类型 ==========
 interface SimNode extends d3.SimulationNodeDatum {
-  id: number
+  id: string
   label: string
   type: KnowledgeNodeType
   tags: string[]
@@ -46,7 +46,7 @@ interface SimLink {
 interface KnowledgeGraphProps {
   data: GraphData | null
   isLoading: boolean
-  onNodeClick: (nodeId: number) => void
+  onNodeClick: (nodeId: string) => void
 }
 
 // ========== 组件定义 ==========
@@ -83,8 +83,8 @@ export function KnowledgeGraph({
   }, [panMode])
 
   // 获取节点邻居关系
-  const getNeighbors = useCallback((nodeId: number): Set<number> => {
-    const neighbors = new Set<number>()
+  const getNeighbors = useCallback((nodeId: string): Set<string> => {
+    const neighbors = new Set<string>()
     for (const link of linksRef.current) {
       if (link.source.id === nodeId) neighbors.add(link.target.id)
       if (link.target.id === nodeId) neighbors.add(link.source.id)
@@ -150,8 +150,8 @@ export function KnowledgeGraph({
     simulationRef.current = simulation
 
     // 动画过渡值
-    const nodeRadiusMap = new Map<number, number>()
-    const nodeOpacityMap = new Map<number, number>()
+    const nodeRadiusMap = new Map<string, number>()
+    const nodeOpacityMap = new Map<string, number>()
     const edgeOpacityMap = new Map<number, number>()
 
     for (const node of nodes) {
@@ -179,7 +179,7 @@ export function KnowledgeGraph({
 
       // 当前悬停的节点（从 ref 读取，实时更新）
       const hovered = hoveredNodeRef.current
-      let neighborSet: Set<number> | null = null
+      let neighborSet: Set<string> | null = null
       if (hovered) {
         neighborSet = getNeighbors(hovered.id)
         neighborSet.add(hovered.id)

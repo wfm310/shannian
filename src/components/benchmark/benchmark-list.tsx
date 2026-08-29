@@ -18,8 +18,8 @@ const statusDotClass: Record<BenchmarkStatus, string> = {
 
 interface BenchmarkListProps {
   benchmarks: Benchmark[]
-  selectedId: number | null
-  onSelect: (id: number) => void
+  selectedId: string | null
+  onSelect: (id: string) => void
 }
 
 export function BenchmarkList({

@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils"
 
 interface PrefillData {
   source: TopicSource
-  sourceId: number | null
+  sourceId: string | null
   topicTitle: string
   topicNote: string
   audience: string
@@ -42,7 +42,7 @@ interface TopicFormProps {
   topic?: Topic | null
   prefill?: PrefillData | null
   onSaved?: () => void
-  onCreated?: (id: number) => void
+  onCreated?: (id: string) => void
 }
 
 function SectionTitle({ children }: { children: string }) {
@@ -70,7 +70,7 @@ export function TopicForm({
   const [topicTitle, setTopicTitle] = useState("")
   const [topicNote, setTopicNote] = useState("")
   const [source, setSource] = useState<TopicSource>("manual")
-  const [sourceId, setSourceId] = useState<number | null>(null)
+  const [sourceId, setSourceId] = useState<string | null>(null)
   const [audience, setAudience] = useState("")
   const [demand, setDemand] = useState("")
   const [contentDimension, setContentDimension] = useState("")

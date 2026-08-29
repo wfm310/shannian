@@ -2,6 +2,7 @@
 // 提供发布记录的 CRUD 操作、标签库管理、标题公式配置等功能
 
 import { db, type PublishRecord, type PublishStatus, type TitleFormula, type TagCategory, type TagLibrary, type ProductionTask } from "./db"
+import { newId, newSyncFields, touchSyncFields } from "./id"
 import { sendNotification } from "./notification"
 import { toast } from "sonner"
 
@@ -90,7 +91,7 @@ export const statusLabels: Record<PublishStatus, string> = {
 
 // ========== 1. 从生产任务创建发布记录 ==========
 
-export async function createPublishRecord(productionId: number): Promise<number> {
+export async function createPublishRecord(productionId: string): Promise<string> {
   // 检查生产任务是否存在且已完成
   const task = await db.productions.get(productionId)
   if (!task) {
@@ -127,7 +128,9 @@ export async function createPublishRecord(productionId: number): Promise<number>
   }
 
   const now = Date.now()
-  const id = await db.publishRecords.add({
+  const id = newId()
+  await db.publishRecords.add({
+    id,
     productionId,
     title: task.title,
     titleFormula: null,
@@ -139,6 +142,7 @@ export async function createPublishRecord(productionId: number): Promise<number>
     status: "draft",
     assignee: CURRENT_USER,
     createdAt: now,
+    ...newSyncFields(),
     updatedAt: now,
   })
 
@@ -148,12 +152,12 @@ export async function createPublishRecord(productionId: number): Promise<number>
     title: "新建发布记录",
     content: `${task.title} → 草稿`,
     relatedModule: "publish",
-    relatedId: id as number,
+    relatedId: id,
     receiver: CURRENT_USER,
   })
 
   toast.success("发布记录已创建")
-  return id as number
+  return id
 }
 
 
@@ -177,7 +181,7 @@ export async function getPublishRecords(
 
 // ========== 3. 获取单条发布记录 ==========
 
-export async function getPublishRecord(id: number): Promise<PublishRecord | undefined> {
+export async function getPublishRecord(id: string): Promise<PublishRecord | undefined> {
   return db.publishRecords.get(id)
 }
 
@@ -185,7 +189,7 @@ export async function getPublishRecord(id: number): Promise<PublishRecord | unde
 // ========== 4. 更新发布记录 ==========
 
 export async function updatePublishRecord(
-  id: number,
+  id: string,
   updates: Partial<PublishRecord>
 ): Promise<void> {
   const record = await db.publishRecords.get(id)
@@ -193,7 +197,7 @@ export async function updatePublishRecord(
 
   await db.publishRecords.update(id, {
     ...updates,
-    updatedAt: Date.now(),
+    ...touchSyncFields(record.syncVersion || 0),
   })
 }
 
@@ -201,7 +205,7 @@ export async function updatePublishRecord(
 // ========== 5. 标记为已发布 ==========
 
 export async function markAsPublished(
-  id: number,
+  id: string,
   videoUrl: string
 ): Promise<void> {
   const record = await db.publishRecords.get(id)
@@ -220,7 +224,7 @@ export async function markAsPublished(
     status: "published",
     videoUrl: videoUrl.trim(),
     publishTime: record.publishTime || now,
-    updatedAt: now,
+    ...touchSyncFields(record.syncVersion || 0),
   })
 
   // 发送通知
@@ -275,7 +279,7 @@ export async function getTags(category?: TagCategory): Promise<TagLibrary[]> {
 
 // ========== 9. 添加标签 ==========
 
-export async function addTag(tag: string, category: TagCategory): Promise<number> {
+export async function addTag(tag: string, category: TagCategory): Promise<string> {
   const trimmed = tag.trim()
   if (!trimmed) {
     toast.error("标签不能为空")
@@ -291,15 +295,18 @@ export async function addTag(tag: string, category: TagCategory): Promise<number
     throw new Error("标签已存在")
   }
 
-  const id = await db.tagLibrary.add({
+  const id = newId()
+  await db.tagLibrary.add({
+    id,
     tag: trimmed,
     category,
     usageCount: 0,
+    ...newSyncFields(),
     createdAt: Date.now(),
   })
 
   toast.success("标签已添加")
-  return id as number
+  return id
 }
 
 
@@ -317,6 +324,7 @@ export async function incrementTagUsage(tags: string[]): Promise<void> {
     if (match && match.id) {
       await db.tagLibrary.update(match.id, {
         usageCount: match.usageCount + 1,
+        ...touchSyncFields(match.syncVersion || 0),
       })
     }
   }

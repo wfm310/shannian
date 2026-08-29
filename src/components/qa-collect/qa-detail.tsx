@@ -103,7 +103,7 @@ export function QaDetail({ question, open, onOpenChange, onAnswerAdded }: QaDeta
 
   // ----- 用某条答案转选题 -----
   // 跳转到选题库，预填：标题=问题内容，备注=答案内容
-  function handleConvertToTopic(answerId: number) {
+  function handleConvertToTopic(answerId: string) {
     if (!data.id) return
     // 跳转参数：from=qa 表示从问答收集来，sourceId=问题ID，answerId=答案ID
     router.push(`/topic-library?from=qa&sourceId=${data.id}&answerId=${answerId}`)
@@ -114,7 +114,7 @@ export function QaDetail({ question, open, onOpenChange, onAnswerAdded }: QaDeta
 
   // ----- 查看已转的选题 -----
   // 跳转到选题库，自动打开对应选题的详情
-  function handleViewTopic(topicId: number) {
+  function handleViewTopic(topicId: string) {
     router.push(`/topic-library?openId=${topicId}`)
     onOpenChange(false)
   }

@@ -48,7 +48,7 @@ export function ScriptTemplateCard({ template, onClick }: ScriptTemplateCardProp
 
       {/* 步骤预览 */}
       <div className="flex flex-wrap gap-1 mb-2">
-        {(template.steps || []).slice(0, 4).map((step: { id: number; name: string }, i: number) => (
+        {(template.steps || []).slice(0, 4).map((step: { id: string; name: string }, i: number) => (
           <span key={step.id} className="text-xs text-muted-foreground">
             {i > 0 && " → "}
             {step.name}

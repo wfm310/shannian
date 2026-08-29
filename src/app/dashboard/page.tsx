@@ -40,10 +40,10 @@ export default function DashboardPage() {
   const [formOpen, setFormOpen] = useState(false)
 
   // ----- 详情视图 -----
-  const [selectedPubId, setSelectedPubId] = useState<number | null>(null)
+  const [selectedPubId, setSelectedPubId] = useState<string | null>(null)
 
   // ----- 编辑弹窗 -----
-  const [editRecordId, setEditRecordId] = useState<number | null>(null)
+  const [editRecordId, setEditRecordId] = useState<string | null>(null)
   const [editOpen, setEditOpen] = useState(false)
 
   // ----- 添加长尾弹窗 -----

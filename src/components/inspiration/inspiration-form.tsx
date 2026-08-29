@@ -32,7 +32,7 @@ interface InspirationFormProps {
   prefillThought?: string                 // 预填的思考过程
   prefillConclusion?: string              // 预填的结论
   onSaved?: () => void                    // 保存成功回调
-  onCreated?: (id: number) => void        // 新建成功回调，传回新灵感 ID
+  onCreated?: (id: string) => void        // 新建成功回调，传回新灵感 ID
 }
 
 

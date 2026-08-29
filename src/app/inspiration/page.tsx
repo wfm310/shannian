@@ -74,12 +74,12 @@ function InspirationPage() {
   // ----- 联动跟踪 -----
   // flashLinkRef：闪念池联动信息（创建成功后回写关联）
   // flashLinkedRef：标记闪念池联动是否已创建
-  const flashLinkRef = useRef<{ flashId: number; content: string } | null>(null)
+  const flashLinkRef = useRef<{ flashId: string; content: string } | null>(null)
   const flashLinkedRef = useRef(false)
 
   // benchmarkLinkRef：对标拆解联动信息
   // benchmarkLinkedRef：标记对标联动是否已创建
-  const benchmarkLinkRef = useRef<{ benchmarkId: number } | null>(null)
+  const benchmarkLinkRef = useRef<{ benchmarkId: string } | null>(null)
   const benchmarkLinkedRef = useRef(false)
 
 
@@ -112,8 +112,8 @@ function InspirationPage() {
     const thought = searchParams.get("thought")
 
     if (from === "flash-thought" && flashIdStr && content) {
-      const flashId = parseInt(flashIdStr, 10)
-      if (isNaN(flashId)) return
+      const flashId = flashIdStr
+      if (!flashId) return
 
       flashLinkedRef.current = false
       flashLinkRef.current = {
@@ -141,8 +141,8 @@ function InspirationPage() {
     const sourceIdStr = searchParams.get("sourceId")
 
     if (from === "benchmark" && sourceIdStr) {
-      const sourceId = parseInt(sourceIdStr, 10)
-      if (isNaN(sourceId)) return
+      const sourceId = sourceIdStr
+      if (!sourceId) return
 
       benchmarkLinkedRef.current = false
 
@@ -177,22 +177,20 @@ function InspirationPage() {
     if (isLoading) return
     const idStr = searchParams.get("id")
     if (idStr) {
-      const id = parseInt(idStr, 10)
-      if (!isNaN(id)) {
-        getInspiration(id).then(ins => {
-          if (ins) {
-            setDetailInspiration(ins)
-            setDetailOpen(true)
-            router.replace(pathname, { scroll: false })
-          }
-        })
-      }
+      const id = idStr
+      getInspiration(id).then((ins) => {
+        if (ins) {
+          setDetailInspiration(ins)
+          setDetailOpen(true)
+          router.replace(pathname, { scroll: false })
+        }
+      })
     }
   }, [searchParams, isLoading, router, pathname])
 
 
   // ----- 新建成功回调 -----
-  function handleCreated(id: number) {
+  function handleCreated(id: string) {
     // 闪念池联动：回写关联 + 发成功通知
     if (flashLinkRef.current?.flashId) {
       flashLinkedRef.current = true
@@ -280,7 +278,7 @@ function InspirationPage() {
 
 
   // ----- 打开详情 -----
-  function handleOpenDetail(id: number) {
+  function handleOpenDetail(id: string) {
     getInspiration(id).then(ins => {
       if (ins) {
         setDetailInspiration(ins)

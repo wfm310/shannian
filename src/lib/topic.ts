@@ -3,6 +3,7 @@
 // 注意：本模块无删除功能（项目全局无删除）
 
 import { db, type Topic, type TopicStatus, type TopicSource, type MatchLevel, type DemandLevel, type CompetitionType, type PriorityLevel } from "./db"
+import { newId, newSyncFields, touchSyncFields } from "./id"
 
 
 // ========== 配置 ==========
@@ -135,6 +136,7 @@ function createDefaultTopic(
     priorityScore: 0,
     priorityLevel: "reserve",
     status: "reserve",
+    ...newSyncFields(),
     updatedAt: Date.now(),
   }
 }
@@ -150,7 +152,7 @@ export async function createTopic(data: {
   topicNote: string
   creator: string
   source?: TopicSource
-  sourceId?: number | null
+  sourceId?: string | null
   audience?: string
   demand?: string
   contentDimension?: string
@@ -159,7 +161,7 @@ export async function createTopic(data: {
   competition?: CompetitionType | null
   contentPositioning?: string
   copyReference?: string
-}): Promise<number> {
+}): Promise<string> {
   const topic = createDefaultTopic(
     data.topicTitle,
     data.topicNote,
@@ -190,8 +192,9 @@ export async function createTopic(data: {
   // 文案参考锁定：创建后即锁定
   topic.copyReferenceLocked = true
 
-  const id = await db.topics.add(topic as any)
-  return id as number
+  const id = newId()
+  await db.topics.add({ id, ...topic } as any)
+  return id
 }
 
 
@@ -214,7 +217,7 @@ export async function getTopics(priorityLevel?: string): Promise<Topic[]> {
 /**
  * 获取单条选题记录
  */
-export async function getTopic(id: number): Promise<Topic | undefined> {
+export async function getTopic(id: string): Promise<Topic | undefined> {
   return await db.topics.get(id)
 }
 
@@ -223,7 +226,7 @@ export async function getTopic(id: number): Promise<Topic | undefined> {
  * 更新选题记录（自动重新计算优先级）
  */
 export async function updateTopic(
-  id: number,
+  id: string,
   updates: Partial<Topic>
 ): Promise<void> {
   const current = await db.topics.get(id)
@@ -248,7 +251,7 @@ export async function updateTopic(
   }
 
   merged.updatedAt = Date.now()
-  await db.topics.update(id, merged as any)
+  await db.topics.update(id, { ...merged, ...touchSyncFields(current.syncVersion || 0) } as any)
 }
 
 

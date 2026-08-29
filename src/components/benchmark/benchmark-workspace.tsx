@@ -1164,7 +1164,7 @@ function BottomActionBar({
 interface BenchmarkWorkspaceProps {
   benchmark: Benchmark | null
   currentUser: string
-  onUpdate: (id: number, updates: Partial<Benchmark>) => Promise<void>
+  onUpdate: (id: string, updates: Partial<Benchmark>) => Promise<void>
   onTransfer: () => void
   onConvert: () => void
   onNext: () => void
@@ -1227,7 +1227,7 @@ export function BenchmarkWorkspace({
   }, [editData, isReadOnly])
 
   // 清除草稿
-  function clearDraft(id: number) {
+  function clearDraft(id: string) {
     try {
       localStorage.removeItem(`benchmark-draft-${id}`)
     } catch (e) {
@@ -1606,7 +1606,7 @@ function DesktopBenchmarkView({
   onTransfer: () => void
   onConvert: () => void
   onNext: () => void
-  onUpdate: (id: number, updates: Partial<Benchmark>) => Promise<void>
+  onUpdate: (id: string, updates: Partial<Benchmark>) => Promise<void>
   progress: number
   isSaving: boolean
   isSubmitting: boolean

@@ -10,7 +10,7 @@ import { inspirationStatusConfig, inspirationSourceConfig } from "@/lib/inspirat
 // ========== 类型定义 ==========
 interface InspirationCardProps {
   inspiration: Inspiration      // 灵感数据
-  onOpen: (id: number) => void    // 点击卡片时调用，传入灵感 ID
+  onOpen: (id: string) => void    // 点击卡片时调用，传入灵感 ID
 }
 
 

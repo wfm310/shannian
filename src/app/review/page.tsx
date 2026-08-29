@@ -36,7 +36,7 @@ export default function ReviewPage() {
   const [formOpen, setFormOpen] = useState(false)
 
   // ----- 详情状态 -----
-  const [detailId, setDetailId] = useState<number | null>(null)
+  const [detailId, setDetailId] = useState<string | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
 
   // ----- 首次加载用骨架屏 -----
@@ -77,7 +77,7 @@ export default function ReviewPage() {
     loadRecords(false)
   }
 
-  function handleCreated(id: number) {
+  function handleCreated(id: string) {
     loadRecords(false)
     setDetailId(id)
     setDetailOpen(true)

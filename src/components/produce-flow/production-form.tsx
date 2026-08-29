@@ -26,7 +26,7 @@ interface ProductionFormProps {
 
 export function ProductionForm({ open, onOpenChange, onCreated }: ProductionFormProps) {
   const [mode, setMode] = useState<ProductionMode>("standard")
-  const [topicId, setTopicId] = useState<number | null>(null)
+  const [topicId, setTopicId] = useState<string | null>(null)
   const [topics, setTopics] = useState<Topic[]>([])
 
   const draftData = { mode, topicId }
@@ -116,8 +116,8 @@ export function ProductionForm({ open, onOpenChange, onCreated }: ProductionForm
             <div className="space-y-2">
               <Label>关联选题（仅显示"立即做"状态）</Label>
               <Select
-                value={topicId ? String(topicId) : ""}
-                onValueChange={(v) => setTopicId(Number(v))}
+                value={topicId ? topicId : ""}
+                onValueChange={(v) => setTopicId(v)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="选择一条选题" />
