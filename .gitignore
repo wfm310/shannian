@@ -52,7 +52,7 @@ next-env.d.ts
 .vercel
 
 /.build-tmp/
-
 /.build-tmp2/
-
+/.build-tmp3/
 /.build-tmp4/
+/.build-tmp*/

@@ -9,8 +9,12 @@
 @import "shadcn/tailwind.css";
 
 /* 限制 Tailwind 扫描范围到 src 目录，避免文档/配置中的方括号字面量（如
-   安全区 padding 的方括号写法）被误识别为 utility class 并生成非法 CSS。 */
+   安全区 padding 的方括号写法）被误识别为 utility class 并生成非法 CSS。
+   注意：@source 只是「追加」扫描路径，默认仍会扫描项目根目录，因此必须
+   用 @source not 显式排除根目录的 .md 文档（路径相对本文件，../../ 为项目根）。 */
 @source "./src";
+@source not "../../*.md";
+@source not "./*.md";
 
 
 @custom-variant dark (&:is(.dark *));
