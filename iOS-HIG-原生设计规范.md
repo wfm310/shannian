@@ -194,8 +194,8 @@ iOS 原生所有文本样式默认支持 Dynamic Type（用户在「设置 > 显
 | 分区间距     | 24px                        | 24px        | `space-y-6`                        |
 | 列表行间距    | 0px（分隔线连接）                  | 0px         | border-b                           |
 | 列表组间距    | 20px                        | 20px        | `space-y-5`                        |
-| 底部安全区    | env(safe-area-inset-bottom) | -           | `pb-[env(safe-area-inset-bottom)]` |
-| 顶部安全区    | env(safe-area-inset-top)    | -           | `h-[env(safe-area-inset-top)]`     |
+| 底部安全区    | env(safe-area-inset-bottom) | -           | `pb-safe` |
+| 顶部安全区    | env(safe-area-inset-top)    | -           | `h-safe-top`     |
 
 ### 2.4 圆角系统
 
@@ -289,11 +289,11 @@ iOS 原生所有文本样式默认支持 Dynamic Type（用户在「设置 > 显
 
 #### 实现规则
 
-- 顶部占位条：`h-[env(safe-area-inset-top)]`
-- 底部 Tab 栏：`pb-[env(safe-area-inset-bottom)]`
-- 内容区底部留白：`pb-[calc(3.5rem+env(safe-area-inset-bottom))]`（Tab 栏高度 + Home 指示条）
-- 底部工具栏：`pb-[calc(0.625rem+env(safe-area-inset-bottom))]`
-- Sheet 底部：`pb-[env(safe-area-inset-bottom)]`
+- 顶部占位条：`h-safe-top`
+- 底部 Tab 栏：`pb-safe`
+- 内容区底部留白：`pb-safe-3`（Tab 栏高度 + Home 指示条）
+- 底部工具栏：`pb-safe-2`
+- Sheet 底部：`pb-safe`
 - 禁止缩放：`maximumScale: 1, userScalable: false`
 
 ### 2.9 断点
@@ -386,7 +386,7 @@ iOS 原生所有文本样式默认支持 Dynamic Type（用户在「设置 > 显
 ```
 
 - 容器高度：`mobile-vh` 类（`height: 100vh` 回退 + `height: 100svh`）
-- 内容区底部留白：`pb-[calc(3.5rem+env(safe-area-inset-bottom))]`
+- 内容区底部留白：`pb-safe-3`
 - 内容区滚动：`overflow-y-auto touch-scroll`
 - iOS 平滑滚动：`-webkit-overflow-scrolling: touch`（globals.css 全局）
 
@@ -433,7 +433,7 @@ iOS 原生所有文本样式默认支持 Dynamic Type（用户在「设置 > 显
 | 规则   | 说明                                                |
 | ---- | ------------------------------------------------- |
 | 定位   | `fixed bottom-5 inset-x-0 z-50`，悬浮在底部上方           |
-| 高度   | `h-[60px]` + `pb-[env(safe-area-inset-bottom)]`   |
+| 高度   | `h-[60px]` + `pb-safe`   |
 | 形态   | 药丸形（胶囊形）`rounded-full`                            |
 | 背景   | 半透明磨砂毛玻璃：`bg-background/80 backdrop-blur-xl`      |
 | 阴影   | iOS 风格柔和阴影 `shadow-[0_8px_24px_rgba(0,0,0,0.08)]` |
@@ -470,7 +470,7 @@ iOS 原生所有文本样式默认支持 Dynamic Type（用户在「设置 > 显
 | 卡片网格  | 移动端单列                                           |
 | 卡片间距  | `gap-3`（12px）                                   |
 | 空状态   | 居中，`py-16`，图标+标题+描述+操作按钮                        |
-| 底部留白  | `pb-[calc(3.5rem+env(safe-area-inset-bottom))]` |
+| 底部留白  | `pb-safe-3` |
 
 ### 3.5 底部工具栏 (Bottom Action Bar)
 
@@ -480,7 +480,7 @@ iOS 原生所有文本样式默认支持 Dynamic Type（用户在「设置 > 显
 | 背景    | 磨砂毛玻璃                        | `bg-background/80 backdrop-blur-xl`               |
 | 顶部分隔  | 50% 透明度细线                    | `border-t border-border/50`                       |
 | 上下间距  | 10px                         | `py-2.5`                                          |
-| 底部安全区 | 留出 Home 指示条空间                | `pb-[calc(0.625rem+env(safe-area-inset-bottom))]` |
+| 底部安全区 | 留出 Home 指示条空间                | `pb-safe-2` |
 | 按钮高度  | 最小 44px                      | `h-11`                                            |
 | 按钮形态  | 药丸形                          | `rounded-full`                                    |
 | 按钮间距  | 8px-10px                     | `gap-2` 或 `gap-2.5`                               |
@@ -604,7 +604,7 @@ iOS 原生所有文本样式默认支持 Dynamic Type（用户在「设置 > 显
 
 #### 4.1.3 Sheet 底部安全区
 
-所有 Sheet 底部必须添加安全区占位：`<div className="pb-[env(safe-area-inset-bottom)]" />`
+所有 Sheet 底部必须添加安全区占位：`<div className="pb-safe" />`
 
 ### 4.2 Alert 弹窗
 
@@ -729,7 +729,7 @@ iOS 原生所有文本样式默认支持 Dynamic Type（用户在「设置 > 显
 | 标题样式 | 13px 大写，muted-foreground         | `text-[13px] uppercase tracking-[0.06em] text-muted-foreground` |
 | 内边距  | 上下 6px，水平 20px                   | `py-1.5 px-5`                                                   |
 | 分隔线  | 底部弱化细线（可选）                       | `border-b border-border/30`                                     |
-| 实现方式 | 使用 CSS `position: sticky` 在滚动容器内 | `sticky top-[env(safe-area-inset-top)]`                         |
+| 实现方式 | 使用 CSS `position: sticky` 在滚动容器内 | `sticky-safe-top`                         |
 
 #### 4.4.4 列表行 Swipe Actions（滑动操作）
 
@@ -1125,7 +1125,7 @@ const [swipeOffset, setSwipeOffset] = useState(0)
       </div>
     </div>
     {/* 安全区 */}
-    <div className="pb-[env(safe-area-inset-bottom)]" />
+    <div className="pb-safe" />
   </SheetContent>
 </Sheet>
 ```
@@ -2009,7 +2009,7 @@ PageHeader 布局（方案 A）：
 | 顶部分隔 | 50% 透明度细线          | `border-t border-border/50`         |
 | 按钮   | 药丸形文字按钮，44px 高     | `h-11 rounded-full`                 |
 | 按钮内容 | 资料 / 大纲 / 历史       | <br />                              |
-| 安全区  | 底部 Home 指示条        | `pb-[env(safe-area-inset-bottom)]`  |
+| 安全区  | 底部 Home 指示条        | `pb-safe`  |
 
 #### 8.5.6 桌面端布局
 
@@ -2107,8 +2107,8 @@ PageHeader 布局（方案 A）：
 
 - [ ] 使用 `useIsDesktop()` Hook 判断移动端（禁止自行实现）
 - [ ] PageHeader 顶栏 sticky + 磨砂毛玻璃
-- [ ] 内容区底部留白 `pb-[calc(3.5rem+env(safe-area-inset-bottom))]`
-- [ ] 顶部安全区占位条 `h-[env(safe-area-inset-top)]`
+- [ ] 内容区底部留白 `pb-safe-3`
+- [ ] 顶部安全区占位条 `h-safe-top`
 - [ ] viewport 禁止缩放 `maximumScale: 1, userScalable: false`
 - [x] PageHeader 标题统一使用 Title 1（28px bold），不使用 Large Title 滚动折叠
 - [ ] Settings 页面使用分组列表 + 行内控件模式

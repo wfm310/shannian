@@ -8,6 +8,10 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* 限制 Tailwind 扫描范围到 src 目录，避免文档/配置中的方括号字面量（如
+   安全区 padding 的方括号写法）被误识别为 utility class 并生成非法 CSS。 */
+@source "./src";
+
 
 @custom-variant dark (&:is(.dark *));
 
@@ -291,5 +295,15 @@ html {
   }
   .pb-safe-5 {
     padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .h-safe-top {
+    height: env(safe-area-inset-top);
+  }
+  .sticky-safe-top {
+    position: sticky;
+    top: env(safe-area-inset-top);
   }
 }
