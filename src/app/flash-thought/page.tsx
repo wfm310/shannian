@@ -143,7 +143,7 @@ export default function FlashThoughtPage() {
       </PageHeader>
 
       {/* 内容区 */}
-      <div className="px-5 pt-3 pb-[calc(3.5rem+env(safe-area-inset-bottom))]">
+      <div className="px-5 pt-3 pb-safe-3">
         {showSkeleton ? (
           viewMode === "list" ? (
             <div className="space-y-3">

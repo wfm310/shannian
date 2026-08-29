@@ -67,7 +67,7 @@ function SheetContent({
         )}
         {children}
         {side === "bottom" && (
-          <div className="flex-shrink-0 pb-[env(safe-area-inset-bottom)]" />
+          <div className="flex-shrink-0 pb-safe" />
         )}
         {showCloseButton && (
           <SheetPrimitive.Close

@@ -533,7 +533,7 @@ function TopicLibraryPage() {
       </PageHeader>
 
       {/* 内容区 */}
-      <div className="px-5 md:px-6 lg:px-8 pt-4 md:pt-6 lg:pt-8 pb-[calc(3.5rem+env(safe-area-inset-bottom))]">
+      <div className="px-5 md:px-6 lg:px-8 pt-4 md:pt-6 lg:pt-8 pb-safe-3">
 
       {showSkeleton ? (
         <div className="grid gap-3 sm:gap-4 [grid-template-columns:repeat(auto-fill,minmax(280px,1fr))]">

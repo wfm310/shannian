@@ -150,7 +150,7 @@ export default function HomePage() {
         onCreate={handleCreate}
       />
 
-      <div className="px-5 pb-[calc(3.5rem+env(safe-area-inset-bottom))]">
+      <div className="px-5 pb-safe-3">
         {/* 快捷统计 */}
         <div className="flex gap-3 pt-3 mb-5">
           <Card

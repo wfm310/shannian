@@ -1121,7 +1121,7 @@ function BottomActionBar({
   if (!show) return null
 
   return (
-    <div className="flex-shrink-0 flex items-center justify-between gap-2 border-t border-border/50 bg-background px-4 py-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))]">
+    <div className="flex-shrink-0 flex items-center justify-between gap-2 border-t border-border/50 bg-background px-4 py-2.5 pb-safe-2">
       <div className="text-[12px] text-muted-foreground">
         已完成 {progress}/4 个维度
       </div>
@@ -1556,7 +1556,7 @@ export function BenchmarkWorkspace({
 
         {/* 已完成/已转化状态：显示下一条 */}
         {(isCompleted || isConverted) && (
-          <div className="flex-shrink-0 flex items-center justify-end border-t border-border/50 bg-background px-4 py-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))]">
+          <div className="flex-shrink-0 flex items-center justify-end border-t border-border/50 bg-background px-4 py-2.5 pb-safe-2">
             <Button variant="outline" size="sm" onClick={onNext} className="h-9 px-4 rounded-full text-[13px]">
               下一条
               <ChevronRight className="size-3.5" />

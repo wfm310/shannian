@@ -13,7 +13,7 @@ export function ResponsiveLayout({ children }: { children: React.ReactNode }) {
   if (!isDesktop) {
     return (
       <div className="flex flex-col mobile-vh">
-        <main className="flex-1 overflow-y-auto touch-scroll min-w-0 pb-[calc(80px+env(safe-area-inset-bottom))]">
+        <main className="flex-1 overflow-y-auto touch-scroll min-w-0 pb-safe-5">
           <PageTransition>{children}</PageTransition>
         </main>
         <MobileTabBar />

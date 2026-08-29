@@ -281,7 +281,7 @@ function BenchmarkPage() {
           <>
             {/* 移动端：全屏列表 + 全屏详情页 */}
             <div className="w-full lg:hidden h-full">
-              <div className="h-full pb-[calc(3.5rem+env(safe-area-inset-bottom))]">
+              <div className="h-full pb-safe-3">
                 <BenchmarkList
                   benchmarks={filteredBenchmarks}
                   selectedId={null}

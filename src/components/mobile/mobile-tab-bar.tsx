@@ -83,7 +83,7 @@ export function MobileTabBar() {
   }, [pathname])
 
   return (
-    <nav className="fixed bottom-5 inset-x-0 z-50 pb-[env(safe-area-inset-bottom)] px-5">
+    <nav className="fixed bottom-5 inset-x-0 z-50 pb-safe px-5">
       <div className="flex items-center gap-2">
         {/* 左侧：药丸形 Tab 容器 */}
         <div className="flex-1 bg-background/80 backdrop-blur-xl rounded-full h-[60px] shadow-[0_8px_24px_rgba(0,0,0,0.08)] overflow-hidden">

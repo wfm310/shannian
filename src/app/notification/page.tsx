@@ -112,7 +112,7 @@ export default function NotificationPage() {
       </PageHeader>
 
       {/* 内容区 */}
-      <div className="px-5 md:px-6 lg:px-8 pt-4 pb-[calc(3.5rem+env(safe-area-inset-bottom))]">
+      <div className="px-5 md:px-6 lg:px-8 pt-4 pb-safe-3">
         {showSkeleton ? (
           <div className="space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (

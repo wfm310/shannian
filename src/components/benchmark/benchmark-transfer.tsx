@@ -170,7 +170,7 @@ export function BenchmarkTransfer({
           </div>
 
           {/* 底部安全区 */}
-          <div className="pb-[env(safe-area-inset-bottom)]" />
+          <div className="pb-safe" />
         </SheetContent>
       </Sheet>
     )

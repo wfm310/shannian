@@ -268,3 +268,28 @@ html {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
+
+/* ========== 安全区（safe-area）工具类 ==========
+ * 注意：Tailwind v4 + Lightning CSS 无法解析方括号任意值中的 env()/calc()，
+ * 会报 "Parsing CSS source code failed"。这里用普通工具类集中封装，
+ * 源码中请用 .pb-safe* 代替 pb-[env(safe-area-inset-bottom)] 等写法。 */
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pb-safe-1 {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+  .pb-safe-2 {
+    padding-bottom: calc(0.625rem + env(safe-area-inset-bottom));
+  }
+  .pb-safe-3 {
+    padding-bottom: calc(3.5rem + env(safe-area-inset-bottom));
+  }
+  .pb-safe-4 {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+  .pb-safe-5 {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+}

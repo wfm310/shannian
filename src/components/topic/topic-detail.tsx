@@ -359,7 +359,7 @@ export function TopicDetail({
         </div>
 
         {/* ===== Footer ===== */}
-        <div className="flex-shrink-0 flex gap-2.5 border-t border-border px-4 sm:px-6 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+        <div className="flex-shrink-0 flex gap-2.5 border-t border-border px-4 sm:px-6 py-4 pb-safe-1">
           <Button variant="secondary" className="flex-1" onClick={() => onOpenChange(false)}>
             关闭
           </Button>

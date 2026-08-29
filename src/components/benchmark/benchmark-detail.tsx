@@ -1033,7 +1033,7 @@ export function BenchmarkDetail({
         ref={contentRef}
         className="flex-1 overflow-y-auto"
       >
-        <div className="px-5 pt-4 pb-[calc(5rem+env(safe-area-inset-bottom))]">
+        <div className="px-5 pt-4 pb-safe-4">
           {/* 基础信息卡 */}
           <div className="rounded-[18px] bg-secondary/15 p-4 mb-5">
             {/* 标题 + 状态 */}
@@ -1146,7 +1146,7 @@ export function BenchmarkDetail({
       </div>
 
       {/* 底部固定：下一条 */}
-      <div className="flex-shrink-0 bg-background/80 backdrop-blur-xl border-t border-border/50 pb-[env(safe-area-inset-bottom)]">
+      <div className="flex-shrink-0 bg-background/80 backdrop-blur-xl border-t border-border/50 pb-safe">
         <div className="px-5 py-3">
           <Button
             className="w-full h-11 rounded-full"
