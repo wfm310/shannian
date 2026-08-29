@@ -541,9 +541,9 @@ export async function updateNote(
   await recalculateBacklinks()
 }
 
-export async function deleteNote(id: number): Promise<void> {
-  await db.knowledgeNotes.delete(id)
-}
+// 注意：本项目全局无删除功能
+// 原有的删除知识笔记（deleteNote）已移除
+// 笔记是知识沉淀的结晶，不做删除
 
 // ========== 标签系统 ==========
 

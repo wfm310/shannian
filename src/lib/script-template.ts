@@ -158,15 +158,11 @@ export async function updateScriptTemplate(
 }
 
 
-// ========== 5. 删除框架 ==========
+// ========== 5. 根据类型生成预设步骤 ==========
 
-export async function deleteScriptTemplate(id: number): Promise<void> {
-  await db.scriptTemplates.delete(id)
-  toast.success("脚本框架已删除")
-}
-
-
-// ========== 6. 根据类型生成预设步骤 ==========
+// 注意：本项目全局无删除功能
+// 原有的删除脚本框架（deleteScriptTemplate）已移除
+// 不使用 isActive=false 停用，不做删除
 
 // 选了框架类型后，自动带出默认步骤（带唯一ID）
 export function generatePresetSteps(type: FrameworkType): ScriptStep[] {

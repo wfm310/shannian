@@ -96,12 +96,7 @@ export default function ScriptTemplatePage() {
     setEditing(null)
   }
 
-  // ----- 删除成功后刷新（静默，不闪骨架屏） -----
-  function handleDeleted() {
-    loadTemplates(false)
-    setDetailTemplate(null)
-    toast.success("已删除")
-  }
+  // 注意：本项目全局无删除功能，原先的 handleDeleted 已移除
 
 
   // ----- 打开新建 -----
@@ -209,7 +204,6 @@ export default function ScriptTemplatePage() {
         open={detailOpen}
         onOpenChange={setDetailOpen}
         onEdit={handleEdit}
-        onDeleted={handleDeleted}
       />
     </>
   )

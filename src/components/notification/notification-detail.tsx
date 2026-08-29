@@ -54,7 +54,8 @@ const moduleConfig: Record<string, { label: string; path: string }> = {
   "review": { label: "复盘记录", path: "/review" },
   "flash-thought": { label: "闪念池", path: "/flash-thought" },
   "inspiration": { label: "灵感记录", path: "/inspiration" },
-  "ai-module": { label: "AI 模块", path: "/ai-module" },
+  // AI 模块为后续规划功能，页面尚未开发，暂不跳转（避免访问不存在的路由报 404）
+  "ai-module": { label: "AI 模块", path: "" },
   "system": { label: "系统通知", path: "" },
 }
 

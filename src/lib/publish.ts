@@ -237,15 +237,9 @@ export async function markAsPublished(
 }
 
 
-// ========== 6. 删除发布记录 ==========
+// ========== 6. 获取待发布的生产任务 ==========
 
-export async function deletePublishRecord(id: number): Promise<void> {
-  await db.publishRecords.delete(id)
-  toast.success("发布记录已删除")
-}
-
-
-// ========== 7. 获取待发布的生产任务 ==========
+// 注意：本项目全局无删除功能，发布记录不做删除
 
 // 返回已完成但还没有发布记录的生产任务
 export async function getPendingProductions(): Promise<ProductionTask[]> {
@@ -309,15 +303,11 @@ export async function addTag(tag: string, category: TagCategory): Promise<number
 }
 
 
-// ========== 10. 删除标签 ==========
+// ========== 10. 批量增加标签使用次数 ==========
 
-export async function deleteTag(id: number): Promise<void> {
-  await db.tagLibrary.delete(id)
-  toast.success("标签已删除")
-}
-
-
-// ========== 11. 批量增加标签使用次数 ==========
+// 注意：本项目全局无删除功能
+// 原有的删除标签（deleteTag）已移除
+// 不用的标签不再显示即可，不做删除
 
 // 发布记录保存时，把选中的标签使用次数 +1
 export async function incrementTagUsage(tags: string[]): Promise<void> {

@@ -332,20 +332,10 @@ export async function createAndLinkTopic(
 }
 
 
-// ========== 8. 删除任务 ==========
+// ========== 8. 内部辅助函数 ==========
 
-export async function deleteProductionTask(id: number): Promise<void> {
-  const task = await db.productions.get(id)
-  if (task?.topicId) {
-    // 如果关联了选题，恢复选题状态为"待生产"
-    await db.topics.update(task.topicId, { status: "pending_production" })
-  }
-  await db.productions.delete(id)
-  toast.success("生产任务已删除")
-}
-
-
-// ========== 内部辅助函数 ==========
+// 注意：本项目全局无删除功能
+// 不想做的任务使用标记废弃（保留数据），不做物理删除
 
 // 创建生产进度待办（一条任务对应一条待办，跟踪阶段进度）
 async function createProductionTodo(

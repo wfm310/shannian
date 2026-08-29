@@ -437,13 +437,9 @@ export async function batchUpdateBenchmarks(ids: number[], updates: Partial<Benc
   }
 }
 
-/**
- * 批量删除对标记录
- * @param ids - 要删除的记录 id 列表
- */
-export async function batchDeleteBenchmarks(ids: number[]): Promise<void> {
-  await db.benchmarks.bulkDelete(ids)
-}
+// 注意：本项目全局无删除功能
+// 原有的批量删除对标记录（batchDeleteBenchmarks）已移除
+// 拆错或不想要的记录保留沉淀，不做删除
 
 /**
  * 格式化相对时间（时间戳 → 几分钟前/几小时前/几天前）

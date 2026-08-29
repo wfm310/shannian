@@ -168,15 +168,11 @@ export async function updateTrackingRecord(
 }
 
 
-// ========== 5. 删除追踪记录 ==========
+// ========== 5. 添加长尾追踪节点 ==========
 
-export async function deleteTrackingRecord(id: number): Promise<void> {
-  await db.trackingRecords.delete(id)
-  toast.success("追踪记录已删除")
-}
-
-
-// ========== 6. 添加长尾追踪节点 ==========
+// 注意：本项目全局无删除功能
+// 数据都是灵感来源与思考过程，后续接入 AI 模块可直接调用
+// 录入错误的数据不做删除，保留沉淀
 
 export async function addCustomTracking(
   publishRecordId: number,

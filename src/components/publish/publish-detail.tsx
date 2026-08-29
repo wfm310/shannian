@@ -15,7 +15,7 @@ import {
 import { useAutoSave } from "@/hooks/use-auto-save"
 import {
   getPublishRecord, updatePublishRecord, markAsPublished,
-  getTags, addTag, deleteTag, incrementTagUsage,
+  getTags, addTag, incrementTagUsage,
   titleFormulaConfig, tagCategoryConfig, tagCategoryOrder,
   statusLabels,
 } from "@/lib/publish"
@@ -179,17 +179,6 @@ export function PublishDetail({
       setTagLibrary(tags)
       // 自动选中新添加的标签
       toggleTag(newTag.trim())
-    } catch {
-      // 错误已在 API 层处理
-    }
-  }
-
-  // ----- 删除标签 -----
-  async function handleDeleteTag(id: number) {
-    try {
-      await deleteTag(id)
-      const tags = await getTags()
-      setTagLibrary(tags)
     } catch {
       // 错误已在 API 层处理
     }
@@ -377,14 +366,6 @@ export function PublishDetail({
                                   }`}
                                 >
                                   #{tag.tag}
-                                </button>
-                                {/* 删除按钮 */}
-                                <button
-                                  type="button"
-                                  onClick={() => tag.id && handleDeleteTag(tag.id)}
-                                  className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  <X className="size-3 text-destructive bg-background rounded-full" />
                                 </button>
                               </div>
                             )

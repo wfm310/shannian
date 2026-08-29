@@ -9,9 +9,7 @@ import {
 } from "@/components/ui/dialog"
 import type { ScriptTemplate } from "@/lib/db"
 import { frameworkPresets } from "@/lib/script-template"
-import { deleteScriptTemplate } from "@/lib/script-template"
-import { toast } from "sonner"
-import { Pencil, Trash2 } from "lucide-react"
+import { Pencil } from "lucide-react"
 
 
 // ========== 类型定义 ==========
@@ -20,13 +18,12 @@ interface ScriptTemplateDetailProps {
   open: boolean                     // 弹窗是否打开
   onOpenChange: (open: boolean) => void  // 关闭回调
   onEdit?: () => void               // 编辑按钮回调
-  onDeleted?: () => void            // 删除成功回调
 }
 
 
 // ========== 组件定义 ==========
 export function ScriptTemplateDetail({
-  template, open, onOpenChange, onEdit, onDeleted
+  template, open, onOpenChange, onEdit
 }: ScriptTemplateDetailProps) {
   if (!template) return null
 
@@ -39,14 +36,6 @@ export function ScriptTemplateDetail({
     const h = date.getHours().toString().padStart(2, "0")
     const m = date.getMinutes().toString().padStart(2, "0")
     return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 ${h}:${m}`
-  }
-
-  // ----- 删除 -----
-  async function handleDelete() {
-    if (!template?.id) return
-    await deleteScriptTemplate(template.id)
-    onOpenChange(false)
-    onDeleted?.()
   }
 
   return (
@@ -111,15 +100,8 @@ export function ScriptTemplateDetail({
           </div>
         </div>
 
-        {/* 底部按钮 */}
+        {/* 底部按钮（全局无删除功能，此处不提供删除） */}
         <DialogFooter className="flex-shrink-0">
-          <Button
-            variant="outline"
-            onClick={handleDelete}
-          >
-            <Trash2 className="size-4" />
-            删除
-          </Button>
           <Button onClick={() => {
             onOpenChange(false)
             onEdit?.()
