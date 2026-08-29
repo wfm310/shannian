@@ -782,7 +782,8 @@ export type {
 
 
 // ========== 创建数据库 ==========
-// 继承 Dexie 类，创建一个名为 "shannian-pro" 的数据库
+// 继承 Dexie 类，创建一个名为 "shannian-pro-v2" 的数据库
+// （v2 库名用于绕过旧库主键不可变的限制，见构造函数内 version(1).stores 的注释）
 class ShannianDatabase extends Dexie {
   // 主键类型已从 number 改为 string（UUID）
   // 原因：自增数字在各设备各自计数，同步到云端会撞号，详见 lib/id.ts
@@ -821,223 +822,25 @@ class ShannianDatabase extends Dexie {
   syncMeta!: Dexie.Table<SyncMeta, string>  // 同步元信息表（记录最后同步时间）
   constructor() {
     // 数据库名称（在浏览器 IndexedDB 里用这个名字查找）
-    super("shannian-pro")
+    // 从 "shannian-pro" 改为 "shannian-pro-v2"：彻底绕开旧库（v1~v11，自增数字主键）
+    // 升级到 UUID 主键时 IndexedDB 不允许修改主键、会抛 "changing primary key" 的硬性限制。
+    super("shannian-pro-v2")
 
-    // 定义数据库版本和表结构
-    // 历史版本用的是 "++id"（自增数字），从 version 12 起改为 UUID 字符串
-    // 字符串主键索引写作 "id"（不加 ++），由代码在写入前生成 UUID
-    // 后面是其他字段名，用逗号分隔，这些字段会被索引（可以用来排序/筛选）
+    // ========== 版本说明（重要） ==========
+    // 数据库名已升级为 "shannian-pro-v2"。
+    //
+    // 原因：历史版本（v1~v11）使用自增数字主键 "++id"，v12 起改为 UUID 字符串主键 "id"。
+    // 但 IndexedDB 不允许修改已存在 object store 的主键（Dexie 会抛
+    // "Not yet support for changing primary key"），任何持有旧库（v11 及更早）的
+    // 用户在打开时都会直接崩溃。由于旧主键（数字）与新主键（UUID）本就不兼容、
+    // 旧数据也设计为不保留（测试数据），最稳妥的做法是换一个全新的数据库名，
+    // 从 version 1 直接以最终 schema 重建，彻底绕过 upgrade 路径里的主键冲突。
+    //
+    // 最终 schema（单一版本，干净无历史包袱）：
+    //   - 所有业务表主键均为 "id"（UUID 字符串，由代码在写入前生成）
+    //   - 所有业务表均带同步字段索引：synced / updatedAt / syncVersion
+    //   - 新增 syncMeta 表，记录最后同步时间（键为 "lastSync" 等）
     this.version(1).stores({
-      todos: "++id, title, initialPriority, assignee, dueDate, status, source, creator, createdAt, completedAt, archived",
-      notifications: "++id, type, relatedModule, receiver, status, createdAt",
-      flashThoughts: "++id, status, categoryTarget, createdAt, processedAt",
-      benchmarks: "++id, status, assignee, sourceChannel, createdAt",
-    })
-      // 注意：description, linkedModules, progressTarget, progressCompleted 不需要索引
-      // 因为它们不需要被用来排序或筛选
-
-          // version 2：添加选题库表
-    // 注意：升级版本时必须把所有表都写上，漏掉的表会被删除
-    this.version(2).stores({
-      todos: "++id, title, initialPriority, assignee, dueDate, status, source, creator, createdAt, completedAt, archived",
-      notifications: "++id, type, relatedModule, receiver, status, createdAt",
-      flashThoughts: "++id, status, categoryTarget, createdAt, processedAt",
-      benchmarks: "++id, status, assignee, sourceChannel, createdAt",
-      topics: "++id, status, source, priorityLevel, creator, createdAt",
-    })
-    
-    // version 3：新增问答收集表
-    // 注意：升级版本时必须把所有表都写上，漏掉的表会被删除
-    this.version(3).stores({
-      todos: "++id, title, initialPriority, assignee, dueDate, status, source, creator, createdAt, completedAt, archived",
-      notifications: "++id, type, relatedModule, receiver, status, createdAt",
-      flashThoughts: "++id, status, categoryTarget, createdAt, processedAt",
-      benchmarks: "++id, status, assignee, sourceChannel, createdAt",
-      topics: "++id, status, source, priorityLevel, creator, createdAt",
-      qaQuestions: "++id, status, source, creator, createdAt",
-    })
-
-        // version 4：新增灵感记录表
-    // 注意：升级版本时必须把所有表都写上，漏掉的表会被删除
-    this.version(4).stores({
-      todos: "++id, title, initialPriority, assignee, dueDate, status, source, creator, createdAt, completedAt, archived",
-      notifications: "++id, type, relatedModule, receiver, status, createdAt",
-      flashThoughts: "++id, status, categoryTarget, createdAt, processedAt",
-      benchmarks: "++id, status, assignee, sourceChannel, createdAt",
-      topics: "++id, status, source, priorityLevel, creator, createdAt",
-      qaQuestions: "++id, status, source, creator, createdAt",
-      inspirations: "++id, status, source, creator, createdAt, updatedAt",
-    })
-
-          // version 5：新增脚本框架库表
-      // 注意：升级版本时必须把所有表都写上，漏掉的表会被删除
-      this.version(5).stores({
-        todos: "++id, title, initialPriority, assignee, dueDate, status, source, creator, createdAt, completedAt, archived",
-        notifications: "++id, type, relatedModule, receiver, status, createdAt",
-        flashThoughts: "++id, status, categoryTarget, createdAt, processedAt",
-        benchmarks: "++id, status, assignee, sourceChannel, createdAt",
-        topics: "++id, status, source, priorityLevel, creator, createdAt",
-        qaQuestions: "++id, status, source, creator, createdAt",
-        inspirations: "++id, status, source, creator, createdAt, updatedAt",
-        scriptTemplates: "++id, frameworkType, creator, createdAt, updatedAt",
-      })
-
-          // version 6：新增内容生产流程表
-    // 注意：升级版本时必须把所有表都写上，漏掉的表会被删除
-    this.version(6).stores({
-      todos: "++id, title, initialPriority, assignee, dueDate, status, source, creator, createdAt, completedAt, archived",
-      notifications: "++id, type, relatedModule, receiver, status, createdAt",
-      flashThoughts: "++id, status, categoryTarget, createdAt, processedAt",
-      benchmarks: "++id, status, assignee, sourceChannel, createdAt",
-      topics: "++id, status, source, priorityLevel, creator, createdAt",
-      qaQuestions: "++id, status, source, creator, createdAt",
-      inspirations: "++id, status, source, creator, createdAt, updatedAt",
-      scriptTemplates: "++id, frameworkType, creator, createdAt, updatedAt",
-      productions: "++id, mode, currentStage, status, assignee, createdAt",
-    })
-
-        // version 7：新增制作发布表
-    // 注意：升级版本时必须把所有表都写上，漏掉的表会被删除
-    this.version(7).stores({
-      todos: "++id, title, initialPriority, assignee, dueDate, status, source, creator, createdAt, completedAt, archived",
-      notifications: "++id, type, relatedModule, receiver, status, createdAt",
-      flashThoughts: "++id, status, categoryTarget, createdAt, processedAt",
-      benchmarks: "++id, status, assignee, sourceChannel, createdAt",
-      topics: "++id, status, source, priorityLevel, creator, createdAt",
-      qaQuestions: "++id, status, source, creator, createdAt",
-      inspirations: "++id, status, source, creator, createdAt, updatedAt",
-      scriptTemplates: "++id, frameworkType, creator, createdAt, updatedAt",
-      productions: "++id, mode, currentStage, status, assignee, createdAt",
-      publishRecords: "++id, productionId, status, assignee, createdAt, updatedAt",
-      tagLibrary: "++id, category, createdAt",
-    })
-
-        // version 8：新增数据追踪表
-    this.version(8).stores({
-      todos: "++id, title, initialPriority, assignee, dueDate, status, source, creator, createdAt, completedAt, archived",
-      notifications: "++id, type, relatedModule, receiver, status, createdAt",
-      flashThoughts: "++id, status, categoryTarget, createdAt, processedAt",
-      benchmarks: "++id, status, assignee, sourceChannel, createdAt",
-      topics: "++id, status, source, priorityLevel, creator, createdAt",
-      qaQuestions: "++id, status, source, creator, createdAt",
-      inspirations: "++id, status, source, creator, createdAt, updatedAt",
-      scriptTemplates: "++id, frameworkType, creator, createdAt, updatedAt",
-      productions: "++id, mode, currentStage, status, assignee, createdAt",
-      publishRecords: "++id, productionId, status, assignee, createdAt, updatedAt",
-      tagLibrary: "++id, category, createdAt",
-      trackingRecords: "++id, publishRecordId, node, status, assignee, createdAt, updatedAt",
-    })
-
-        // version 9：新增复盘记录表
-    this.version(9).stores({
-      todos: "++id, title, initialPriority, assignee, dueDate, status, source, creator, createdAt, completedAt, archived",
-      notifications: "++id, type, relatedModule, receiver, status, createdAt",
-      flashThoughts: "++id, status, categoryTarget, createdAt, processedAt",
-      benchmarks: "++id, status, assignee, sourceChannel, createdAt",
-      topics: "++id, status, source, priorityLevel, creator, createdAt",
-      qaQuestions: "++id, status, source, creator, createdAt",
-      inspirations: "++id, status, source, creator, createdAt, updatedAt",
-      scriptTemplates: "++id, frameworkType, creator, createdAt, updatedAt",
-      productions: "++id, mode, currentStage, status, assignee, createdAt",
-      publishRecords: "++id, productionId, status, assignee, createdAt, updatedAt",
-      tagLibrary: "++id, category, createdAt",
-      trackingRecords: "++id, publishRecordId, node, status, assignee, createdAt, updatedAt",
-      reviewRecords: "++id, type, status, assignee, createdAt, completedAt",
-    })
-
-    // version 10：新增大脑知识库表
-    this.version(10).stores({
-      todos: "++id, title, initialPriority, assignee, dueDate, status, source, creator, createdAt, completedAt, archived",
-      notifications: "++id, type, relatedModule, receiver, status, createdAt",
-      flashThoughts: "++id, status, categoryTarget, createdAt, processedAt",
-      benchmarks: "++id, status, assignee, sourceChannel, createdAt",
-      topics: "++id, status, source, priorityLevel, creator, createdAt",
-      qaQuestions: "++id, status, source, creator, createdAt",
-      inspirations: "++id, status, source, creator, createdAt, updatedAt",
-      scriptTemplates: "++id, frameworkType, creator, createdAt, updatedAt",
-      productions: "++id, mode, currentStage, status, assignee, createdAt",
-      publishRecords: "++id, productionId, status, assignee, createdAt, updatedAt",
-      tagLibrary: "++id, category, createdAt",
-      trackingRecords: "++id, publishRecordId, node, status, assignee, createdAt, updatedAt",
-      reviewRecords: "++id, type, status, assignee, createdAt, completedAt",
-      knowledgeNodes: "++id, nodeType, sourceModule, sourceRecordId, createdAt, updatedAt",
-      knowledgeEdges: "++id, sourceNodeId, targetNodeId, edgeType, createdAt",
-    })
-
-    // version 11：新增知识笔记表 + 知识节点加 links/linkedBy 字段
-    this.version(11).stores({
-      todos: "++id, title, initialPriority, assignee, dueDate, status, source, creator, createdAt, completedAt, archived",
-      notifications: "++id, type, relatedModule, receiver, status, createdAt",
-      flashThoughts: "++id, status, categoryTarget, createdAt, processedAt",
-      benchmarks: "++id, status, assignee, sourceChannel, createdAt",
-      topics: "++id, status, source, priorityLevel, creator, createdAt",
-      qaQuestions: "++id, status, source, creator, createdAt",
-      inspirations: "++id, status, source, creator, createdAt, updatedAt",
-      scriptTemplates: "++id, frameworkType, creator, createdAt, updatedAt",
-      productions: "++id, mode, currentStage, status, assignee, createdAt",
-      publishRecords: "++id, productionId, status, assignee, createdAt, updatedAt",
-      tagLibrary: "++id, category, createdAt",
-      trackingRecords: "++id, publishRecordId, node, status, assignee, createdAt, updatedAt",
-      reviewRecords: "++id, type, status, assignee, createdAt, completedAt",
-      knowledgeNodes: "++id, nodeType, sourceModule, sourceRecordId, createdAt, updatedAt",
-      knowledgeEdges: "++id, sourceNodeId, targetNodeId, edgeType, createdAt",
-      knowledgeNotes: "++id, createdAt, updatedAt",
-    })
-
-    // version 12：主键从自增数字改为 UUID 字符串
-    //
-    // 为什么要改？
-    //   自增数字是「各设备各自计数」的，你电脑上第 1 条和小伙伴手机上第 1 条
-    //   是两条完全不同的记录，编号却都是 1 —— 同步到云端会撞号导致数据错乱。
-    //   UUID 全球唯一，永不冲突，是双人协作 + 云端同步的前提。
-    //
-    // 索引写法从 "++id" 改为 "id"（去掉 ++，表示由代码提供主键值，不由数据库自增）
-    //
-    // ⚠️ 注意：本次改动不保留旧数据
-    //   旧数据的主键是数字，新主键是字符串，类型不兼容，无法自动迁移。
-    //   由于当前数据库里都是测试数据，这里直接清空重建。
-    //   （若是真实数据，需要先导出备份再迁移）
-    this.version(12).stores({
-      todos: "id, title, initialPriority, assignee, dueDate, status, source, creator, createdAt, completedAt, archived",
-      notifications: "id, type, relatedModule, receiver, status, createdAt",
-      flashThoughts: "id, status, categoryTarget, createdAt, processedAt",
-      benchmarks: "id, status, assignee, sourceChannel, createdAt",
-      topics: "id, status, source, priorityLevel, creator, createdAt",
-      qaQuestions: "id, status, source, creator, createdAt",
-      inspirations: "id, status, source, creator, createdAt, updatedAt",
-      scriptTemplates: "id, frameworkType, creator, createdAt, updatedAt",
-      productions: "id, mode, currentStage, status, assignee, createdAt",
-      publishRecords: "id, productionId, status, assignee, createdAt, updatedAt",
-      tagLibrary: "id, category, createdAt",
-      trackingRecords: "id, publishRecordId, node, status, assignee, createdAt, updatedAt",
-      reviewRecords: "id, type, status, assignee, createdAt, completedAt",
-      knowledgeNodes: "id, nodeType, sourceModule, sourceRecordId, createdAt, updatedAt",
-      knowledgeEdges: "id, sourceNodeId, targetNodeId, edgeType, createdAt",
-      knowledgeNotes: "id, createdAt, updatedAt",
-    }).upgrade(async (tx) => {
-      // 清空旧数据：数字主键与 UUID 字符串主键不兼容，无法转换
-      // 当前库里是测试数据，直接清空；若有真实数据需先导出备份
-      const tables = [
-        "todos", "notifications", "flashThoughts", "benchmarks", "topics",
-        "qaQuestions", "inspirations", "scriptTemplates", "productions",
-        "publishRecords", "tagLibrary", "trackingRecords", "reviewRecords",
-        "knowledgeNodes", "knowledgeEdges", "knowledgeNotes",
-      ] as const
-
-      for (const name of tables) {
-        await tx.table(name).clear()
-      }
-    })
-
-    // version 13：新增同步字段索引 + syncMeta 表
-    //
-    // 为支持云端同步（Turso），所有业务表新增三个同步字段：
-    //   synced（是否已同步）、updatedAt（最后更新时间）、syncVersion（乐观并发版本号）
-    // 这里把这三个字段加入索引，供同步层按 updatedAt 筛选增量、按 synced 筛选待同步项。
-    // 同时新增 syncMeta 表，记录最后同步时间。
-    //
-    // ⚠️ 同样不保留旧数据（同步字段不兼容），测试数据直接清空。
-    this.version(13).stores({
       todos: "id, title, initialPriority, assignee, dueDate, status, source, creator, createdAt, completedAt, archived, synced, updatedAt, syncVersion",
       notifications: "id, type, relatedModule, receiver, status, createdAt, synced, updatedAt, syncVersion",
       flashThoughts: "id, status, categoryTarget, createdAt, processedAt, synced, updatedAt, syncVersion",
@@ -1055,17 +858,6 @@ class ShannianDatabase extends Dexie {
       knowledgeEdges: "id, sourceNodeId, targetNodeId, edgeType, createdAt, synced, syncVersion",
       knowledgeNotes: "id, createdAt, updatedAt, synced, syncVersion",
       syncMeta: "key",
-    }).upgrade(async (tx) => {
-      const tables = [
-        "todos", "notifications", "flashThoughts", "benchmarks", "topics",
-        "qaQuestions", "inspirations", "scriptTemplates", "productions",
-        "publishRecords", "tagLibrary", "trackingRecords", "reviewRecords",
-        "knowledgeNodes", "knowledgeEdges", "knowledgeNotes",
-      ] as const
-
-      for (const name of tables) {
-        await tx.table(name).clear()
-      }
     })
   }
 }
@@ -1073,3 +865,12 @@ class ShannianDatabase extends Dexie {
 // 创建数据库实例（全局唯一）
 // export 表示这个变量可以被其他文件导入使用
 export const db = new ShannianDatabase()
+
+// 清理旧库（shannian-pro，自增数字主键时代的遗留库）
+// 换用 "shannian-pro-v2" 后，旧库已成为孤儿，留着会白白占用浏览器空间。
+// 这里在打开新库成功后，尝试删除旧库；失败则静默忽略（不阻塞主流程）。
+db.open()
+  .then(() => Dexie.delete("shannian-pro"))
+  .catch(() => {
+    /* 旧库可能不存在或已被删除，忽略 */
+  })
