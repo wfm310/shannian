@@ -1,26 +1,270 @@
-@import "tailwindcss";
+/* Inter 字体 - 4 种字重（400 正常, 500 中粗, 600 半粗, 700 粗体） */
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+
+  --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-sans);
+
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-tint: var(--brand-tint);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Inter", sans-serif;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.145 0 0);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.97 0.005 264);
+  --secondary-foreground: oklch(0.30 0.03 264);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.95 0.015 264);
+  --accent-foreground: oklch(0.30 0.03 264);
+  --brand: oklch(0.80 0.16 76);
+  --brand-foreground: oklch(0.23 0.03 264);
+  --brand-tint: oklch(0.96 0.04 76);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.23 0.03 264);
+  --chart-1: oklch(0.80 0.16 76);
+  --chart-2: oklch(0.55 0.18 240);
+  --chart-3: oklch(0.65 0.15 180);
+  --chart-4: oklch(0.72 0.16 60);
+  --chart-5: oklch(0.6 0.2 10);
+  --radius: 0.375rem;
+  --radius-4xl: 1.125rem;
+
+  /* iOS HIG 阴影系统 */
+  --shadow-ios-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-ios-md: 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-ios-lg: 0 8px 24px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.04);
+
+  /* iOS 动画曲线令牌 */
+  --ease-ios-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-ios-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-ios-out: cubic-bezier(0.0, 0.0, 0.2, 1);
+  --ease-ios-in-out: cubic-bezier(0.4, 0.0, 0.2, 1);
+
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.23 0.03 264);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.96 0.04 76);
+  --sidebar-accent-foreground: oklch(0.23 0.03 264);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.23 0.03 264);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.72 0.02 264);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.27 0.01 264);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.30 0.02 264);
+  --accent-foreground: oklch(0.985 0 0);
+  --brand: oklch(0.80 0.16 76);
+  --brand-foreground: oklch(0.985 0 0);
+  --brand-tint: oklch(0.30 0.05 76);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.72 0.02 264);
+  --chart-1: oklch(0.80 0.16 76);
+  --chart-2: oklch(0.55 0.18 240);
+  --chart-3: oklch(0.65 0.15 180);
+  --chart-4: oklch(0.72 0.16 60);
+  --chart-5: oklch(0.6 0.2 10);
+  --sidebar: oklch(0.145 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.72 0.02 264);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.30 0.05 76);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.72 0.02 264);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    cursor: default;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+  /* 交互元素恢复指针光标 */
+  button,
+  [role="button"],
+  [role="tab"],
+  a[href],
+  summary,
+  label[for] {
+    cursor: pointer;
+  }
+  /* 输入元素保留文本光标 */
+  input,
+  textarea,
+  [contenteditable="true"] {
+    cursor: text;
+  }
+  /* 隐藏 number 输入框的上下箭头，避免 hover 闪烁 */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ========== 文本选择色 ========== */
+
+::selection {
+  background-color: color-mix(in oklch, var(--foreground), transparent 85%);
+  color: inherit;
+}
+
+/* ========== Reduce Motion 无障碍支持 ========== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ========== Shimmer 骨架屏动画 ========== */
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 0%,
+    color-mix(in oklch, var(--muted), var(--foreground) 8%) 50%,
+    var(--muted) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s linear infinite;
+}
+
+/* ========== 全局隐藏滚动条 ========== */
+
+/* 隐藏所有滚动条（保留滚动功能） */
+/* 适配 Firefox */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;  /* IE / 旧版 Edge */
+}
+
+/* 适配 Chrome / Safari / 新版 Edge */
+*::-webkit-scrollbar {
+  display: none;
+}
+
+/* ========== iOS Safari 兼容性修复 ========== */
+
+/* svh 不支持时的 viewport 高度回退 */
+.mobile-vh {
+  height: 100vh;
+  height: 100svh;
+}
+
+/* 防止关闭的 Dialog/Sheet 遮罩层阻挡触摸 */
+[data-slot="dialog-overlay"][hidden],
+[data-slot="sheet-overlay"][hidden] {
+  pointer-events: none !important;
+}
+
+/* iOS Safari 滚动容器触摸优化 */
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
+/* iOS Safari 触摸响应优化 */
+html {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }

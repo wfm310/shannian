@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# IDE / 编辑器本地数据（不提交，避免污染仓库）
+.codebuddy/
+.vscode/
+.idea/
+
+# Windows 快捷方式（误入源码目录的垃圾文件）
+*.lnk
+
+.vercel
