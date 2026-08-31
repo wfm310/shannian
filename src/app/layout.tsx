@@ -12,6 +12,8 @@ import { ToasterProvider } from "@/components/toaster-provider"
 import { QuickFlashThought } from "@/components/quick-flash-thought"
 // PWA Service Worker 注册（仅生产环境生效）
 import { SWRegister } from "@/components/sw-register"
+// 业务规则层启动器（消息规则引擎 + 自动归档定时任务）
+import { CoreBootstrap } from "@/components/core-bootstrap"
 
 
 // ========== 元数据配置 ==========
@@ -63,6 +65,7 @@ export default function RootLayout({
           <QuickFlashThought />
           <ResponsiveLayout>{children}</ResponsiveLayout>
           <SWRegister />
+          <CoreBootstrap />
         </TooltipProvider>
       </body>
     </html>

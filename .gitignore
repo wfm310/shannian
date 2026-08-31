@@ -50,14 +50,16 @@ next-env.d.ts
 # Windows 快捷方式（误入源码目录的垃圾文件）
 *.lnk
 
+# 提交信息临时文件（用于规避 PowerShell 中文参数编码问题）
+.commit-msg.tmp
+
 .vercel
 
-/.build-tmp/
-/.build-tmp2/
-/.build-tmp3/
-/.build-tmp4/
+# 构建验证临时目录
+# 注：IDE 安全删除策略会拦截大目录批量清理，故每次构建用新序号目录绕过
 /.build-tmp*/
-/.build-verify/
+/.build-verify*/
+/.build-v*/
 
 # Pixso 导出的样式系统总览（含 35MB 字体与生成代码，仅作色值参考，不入库）
 /项目文档/闪念 Pro · 样式系统总览/
