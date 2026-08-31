@@ -163,6 +163,14 @@
   --converted: rgb(139 124 246); /* = violet/400 #8B7CF6 */
   --converted-light: rgb(169 150 249); /* = violet/300 #A996F9 */
 
+  /* ========== 状态 tint 底色（Badge 用）==========
+     设计规律：Badge = tint 底 + 主色文字/圆点。
+     Pixso 只定义了 brand-tint，violet 与 warning 的 tint 底是画板里的
+     硬编码色（未绑变量），故在此补齐。
+     取自「PC · 对标拆解列表」画板 40:278 的 Card-0 / Card-2。 */
+  --converted-tint: rgb(34 28 54); /* #221C36 */
+  --warning-tint: rgb(38 30 14); /* #261E0E */
+
   /* 遮罩（未入 Pixso token，保留值） */
   --overlay: rgb(4 6 9 / 0.6);
 
@@ -267,6 +275,23 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+
+  /* ---- Pixso 语义令牌 → Tailwind 色名 ----
+     这样业务代码可直接用 bg-surface / text-text-secondary /
+     bg-brand-tint / bg-converted-tint 等类名，无需记色值。 */
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-elevated: var(--elevated);
+  --color-border-strong: var(--border-strong);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-converted: var(--converted);
+  --color-converted-light: var(--converted-light);
+  --color-converted-tint: var(--converted-tint);
+  --color-warning-tint: var(--warning-tint);
+  --color-overlay: var(--overlay);
 
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
