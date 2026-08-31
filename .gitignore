@@ -55,11 +55,12 @@ next-env.d.ts
 
 .vercel
 
-# 构建验证临时目录
-# 注：IDE 安全删除策略会拦截大目录批量清理，故每次构建用新序号目录绕过
-/.build-tmp*/
-/.build-verify*/
-/.build-v*/
+# 构建验证临时目录（Next.js distDir，用 NEXT_DIST_DIR 环境变量指定）
+# 注 1：IDE 安全删除策略会拦截大目录批量清理，故每次构建用新序号目录绕过
+# 注 2：必须用通配 /.build-*/ 覆盖所有序号变体。此前只写了 .build-v*/
+#      与 .build-tmp*/，导致 .build-w1 被误提交（641 个文件、1.7 万行）
+/.build-*/
+/.next*/
 
 # Pixso 导出的样式系统总览（含 35MB 字体与生成代码，仅作色值参考，不入库）
 /项目文档/闪念 Pro · 样式系统总览/
