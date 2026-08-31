@@ -54,7 +54,9 @@
     ".build-v5/types/**/*.ts",
     ".build-v5/dev/types/**/*.ts",
     ".build-v6/types/**/*.ts",
-    ".build-v6/dev/types/**/*.ts"
+    ".build-v6/dev/types/**/*.ts",
+    ".build-v7/types/**/*.ts",
+    ".build-v7/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

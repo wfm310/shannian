@@ -59,7 +59,11 @@ export default function RootLayout({
     <html lang="zh-CN" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{
-          __html: `(function(){try{var t=localStorage.getItem('theme')||'light';if(t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`
+          // 主题策略（2026-08-31 改）：Dark 优先 —— Pixso 变量集合以 Dark 为默认模式
+          //   - 默认 / 显式 dark / system 且系统偏好暗色 → html 加 .dark
+          //     （.dark 仅作 Tailwind dark: 变体的开关，不再承载变量定义）
+          //   - 显式 light → 加 .light，由 globals.css 的 .light 提供亮色语义值
+          __html: `(function(){try{var t=localStorage.getItem('theme')||'dark';var d=document.documentElement;if(t==='light'){d.classList.add('light')}else if(t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches)){d.classList.add('dark')}else{d.classList.add('dark')}}catch(e){}})()`
         }} />
       </head>
       <body className="antialiased">

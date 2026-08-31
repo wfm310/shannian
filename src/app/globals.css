@@ -24,114 +24,205 @@
 @custom-variant dark (&:is(.dark *));
 
 /* =============================================================
-   设计令牌 · 色阶层
+   设计令牌
    -------------------------------------------------------------
-   来源：Pixso 变量集合「闪念 Pro Tokens」（50 个唯一色值）
-   规则：这是色值的唯一事实来源，改色只改这一段
+   来源：Pixso 变量集合「闪念 Pro Tokens」（id 29:716）
+         Light 模式 29:714 / Dark 模式 29:715
+         共 73 个变量 = 颜色 50（色阶 30 + 语义 20）+ 尺寸 23
+   对齐：项目文档/设计规范速查.md 第 17~84 行（色彩 / 字号 / 形状与间距）
+   -------------------------------------------------------------
+   重要教训（2026-08-31）：
+   曾把 Light 与 Dark 两套语义色按亮度误排成一个连续色阶，
+   例如把 Dark warning #F5B93D 与 Light warning #B47D0E 当成
+   「黄色阶的两级」。二者是同一语义在两种模式下的取值，不可混排。
+   命名必须与 Pixso 变量集合一致，不得自创。
    -------------------------------------------------------------
    为什么写在这里而不是独立的 tokens.css：
    1. Tailwind 只在含 @import "tailwindcss" 的入口文件里处理 @theme，
       独立文件里的 @theme 不生效（已实测验证）
    2. 用 @import 引入也不行：Turbopack 在 Tailwind 之后才展开 @import
-   3. 独立文件会被打包成单独的 CSS 文件，加载顺序不确定，
-      可能覆盖 globals.css 的语义值
+   3. 独立文件会被打包成单独的 CSS 文件，加载顺序不可控
    -------------------------------------------------------------
    注意：本文件在 src 目录内，会被 Tailwind 扫描提取 class 候选，
    故注释中禁止书写带通配符的类名模式，否则会生成非法 CSS。
    ============================================================= */
 @theme {
-  /* ========== 青绿 · 主色（13） ========== */
-  --color-mint-50: rgb(227 251 244);
-  --color-mint-100: rgb(194 245 230);
-  --color-mint-200: rgb(159 237 216);
-  --color-mint-300: rgb(111 233 203);
-  --color-mint-400: rgb(76 221 184);
-  --color-mint-500: rgb(45 212 168); /* 主色 */
-  --color-mint-600: rgb(23 180 140);
-  --color-mint-700: rgb(15 165 127);
-  --color-mint-800: rgb(14 140 109);
-  --color-mint-900: rgb(10 102 80);
-  --color-mint-950: rgb(7 77 59);
-  --color-mint-deep: rgb(14 42 34);
-  --color-mint-on: rgb(4 18 13); /* 青绿底上的文字色 */
+  /* ========== 色阶 brand（青绿主色，10 级） ========== */
+  --color-brand-50: rgb(227 251 244);
+  --color-brand-100: rgb(194 245 230);
+  --color-brand-200: rgb(159 237 216);
+  --color-brand-300: rgb(111 233 203);
+  --color-brand-400: rgb(76 221 184);
+  --color-brand-500: rgb(45 212 168);
+  --color-brand-600: rgb(23 180 140);
+  --color-brand-700: rgb(14 140 109);
+  --color-brand-800: rgb(10 102 80);
+  --color-brand-900: rgb(7 77 59);
 
-  /* ========== 紫 · 已转化态（10） ========== */
-  --color-purple-100: rgb(240 237 254);
-  --color-purple-200: rgb(226 219 253);
-  --color-purple-300: rgb(199 184 251);
-  --color-purple-400: rgb(169 150 249);
-  --color-purple-500: rgb(139 124 246); /* 主色 */
-  --color-purple-600: rgb(109 91 232);
-  --color-purple-700: rgb(87 68 204);
-  --color-purple-800: rgb(69 53 163);
-  --color-purple-900: rgb(54 41 126);
-  --color-purple-950: rgb(42 31 96);
+  /* ========== 色阶 violet（已转化态紫，10 级） ========== */
+  --color-violet-50: rgb(240 237 254);
+  --color-violet-100: rgb(226 219 253);
+  --color-violet-200: rgb(199 184 251);
+  --color-violet-300: rgb(169 150 249);
+  --color-violet-400: rgb(139 124 246);
+  --color-violet-500: rgb(109 91 232);
+  --color-violet-600: rgb(87 68 204);
+  --color-violet-700: rgb(69 53 163);
+  --color-violet-800: rgb(54 41 126);
+  --color-violet-900: rgb(42 31 96);
 
-  /* ========== 黄 · 优先级 / 警示（2） ========== */
-  --color-amber-500: rgb(245 185 61); /* 主色 */
-  --color-amber-700: rgb(180 125 14);
-
-  /* ========== 红 · 必填 / 危险（2） ========== */
-  --color-red-500: rgb(244 86 78); /* 主色 */
-  --color-red-600: rgb(217 59 51);
-
-  /* ========== 蓝 · 信息（1） ========== */
-  --color-sky-500: rgb(56 189 248);
-
-  /* ========== 中性 · 暗底 → 浅字（22） ========== */
-  --color-neutral-950: rgb(12 15 20);
+  /* ========== 色阶 neutral（中性，11 级 50~950） ========== */
+  --color-neutral-50: rgb(248 250 252);
+  --color-neutral-100: rgb(241 244 248);
+  --color-neutral-200: rgb(226 232 238);
+  --color-neutral-300: rgb(203 213 223);
+  --color-neutral-400: rgb(154 168 184);
+  --color-neutral-500: rgb(102 120 138);
+  --color-neutral-600: rgb(78 93 110);
+  --color-neutral-700: rgb(55 68 79);
+  --color-neutral-800: rgb(35 43 56);
   --color-neutral-900: rgb(21 26 34);
-  --color-neutral-850: rgb(23 32 42);
-  --color-neutral-800: rgb(26 33 43);
-  --color-neutral-775: rgb(27 34 45);
-  --color-neutral-700: rgb(35 43 56);
-  --color-neutral-600: rgb(46 57 73);
-  --color-neutral-550: rgb(55 68 79);
-  --color-neutral-500: rgb(78 93 110);
-  --color-neutral-450: rgb(86 98 116);
-  --color-neutral-400: rgb(102 120 138);
-  --color-neutral-350: rgb(126 140 160);
-  --color-neutral-300: rgb(138 150 165);
-  --color-neutral-250: rgb(154 168 184);
-  --color-neutral-200: rgb(203 213 223);
-  --color-neutral-150: rgb(226 232 238);
-  --color-neutral-100: rgb(237 242 248);
-  --color-neutral-90: rgb(241 244 248);
-  --color-neutral-80: rgb(243 246 248);
-  --color-neutral-70: rgb(245 248 250);
-  --color-neutral-60: rgb(248 250 252);
-  --color-neutral-50: rgb(255 255 255);
+  --color-neutral-950: rgb(12 15 20);
+
+  /* ========== 图表色（5） ========== */
+  --color-chart-1: rgb(45 212 168);
+  --color-chart-2: rgb(139 124 246);
+  --color-chart-3: rgb(56 189 248);
+  --color-chart-4: rgb(245 185 61);
+  --color-chart-5: rgb(244 86 78);
+
+  /* ========== 圆角（6） ========== */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* ========== 间距（7） ========== */
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-12: 48px;
+
+  /* ========== 字号（10） ========== */
+  --text-36: 36px;
+  --text-30: 30px;
+  --text-24: 24px;
+  --text-20: 20px;
+  --text-18: 18px;
+  --text-16: 16px;
+  --text-14: 14px;
+  --text-13: 13px;
+  --text-12: 12px;
+  --text-11: 11px;
 }
 
 /* =============================================================
-   设计令牌 · 语义层（Pixso 暗色主题的目标值）
+   设计令牌 · 语义层
    -------------------------------------------------------------
-   渐进式接入：本块位于下方「旧主题 :root」之前，
-   同名的语义变量（背景 / 卡片 / 主色等）会被后者覆盖，
-   因此现有页面配色不变，避免「暗底黑字」的可读性事故。
-   本块独有的变量（表面 / 文本层级 / 已转化色等）立即生效，供新组件使用。
-   UI 重写完成后，删除下方旧 :root / .dark 的 oklch 定义即可整体切换暗色。
+   Dark 优先：:root 为 Dark 模式（Pixso 默认），.light 为备选亮色。
+   命名与 Pixso 变量集合完全一致，共 14 个语义令牌。
+   -------------------------------------------------------------
+   命名规则：--surface / --elevated / --border-strong /
+            --text-primary / --text-secondary / --text-tertiary /
+            --brand / --brand-foreground / --brand-tint
+   禁止自创 --surface-raised / --text-body 之类别名（曾踩坑）。
    ============================================================= */
+
+/* ---- Dark 模式（默认）---- */
 :root {
   /* 表面 */
   --background: rgb(12 15 20); /* 页面底 */
-  --surface: rgb(21 26 34); /* 卡片 */
-  --surface-raised: rgb(23 32 42); /* 弹窗 / 抽屉 */
-  --surface-sunken: rgb(26 33 43); /* 输入框 */
-  --surface-hover: rgb(35 43 56);
+  --surface: rgb(21 26 34); /* 卡片 / 输入框底 */
+  --surface-hover: rgb(27 34 45); /* 卡片 hover */
+  --elevated: rgb(26 33 43); /* 弹窗 / 抽屉底 */
+
+  /* 描边 */
+  --border: rgb(35 43 56); /* 常规描边 / 分隔线 */
+  --border-strong: rgb(46 57 73); /* 强调描边 / 输入框聚焦 */
 
   /* 文本 */
-  --text-body: rgb(226 232 238);
-  --text-label: rgb(203 213 223);
-  --text-secondary: rgb(138 150 165);
-  --text-muted: rgb(86 98 116);
-  --text-faint: rgb(78 93 110);
+  --foreground: rgb(237 242 248); /* = text-primary，标题 / 正文 */
+  --text-secondary: rgb(126 140 160); /* label / 次级 / 系统通知 */
+  --text-tertiary: rgb(86 98 116); /* 弱 / 极弱 / 终态 / 禁用 */
 
-  /* 状态色 */
-  --converted: rgb(139 124 246); /* 已转化（紫） */
-  --warning: rgb(245 185 61);
-  --danger: rgb(244 86 78);
-  --info: rgb(56 189 248);
+  /* 主色与状态 */
+  --brand: rgb(45 212 168); /* 确认 / 跳转 / 选中 */
+  --brand-foreground: rgb(4 18 13); /* brand 底上的文字 */
+  --brand-tint: rgb(14 42 34); /* brand 弱底 */
+  --warning: rgb(245 185 61); /* 优先级 / 警示 / 待办 */
+  --danger: rgb(244 86 78); /* 必填星号 / 危险 */
+
+  /* 已转化态（紫，总纲规则 5） */
+  --converted: rgb(139 124 246);
+  --converted-light: rgb(169 150 249);
+
+  /* 遮罩（未入 Pixso token，保留值） */
+  --overlay: rgb(4 6 9 / 0.6);
+
+  /* ========== shadcn 组件契约变量 ==========
+     shadcn 组件依赖这些变量，必须全部从上面的 Pixso 语义令牌映射过来。
+     若只删旧主题而不补齐，这些变量会变成未定义，导致元素样式缺失。 */
+  --card: var(--surface);
+  --card-foreground: var(--foreground);
+  --popover: var(--elevated);
+  --popover-foreground: var(--foreground);
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-foreground);
+  --secondary: var(--surface-hover);
+  --secondary-foreground: var(--foreground);
+  --muted: var(--surface-hover);
+  --muted-foreground: var(--text-secondary);
+  --accent: var(--surface-hover);
+  --accent-foreground: var(--foreground);
+  --destructive: var(--danger);
+  --destructive-foreground: rgb(255 255 255);
+  --input: var(--border-strong);
+  --ring: var(--brand);
+
+  /* 侧边栏系列 */
+  --sidebar: var(--surface);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: var(--brand-foreground);
+  --sidebar-accent: var(--surface-hover);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--brand);
+}
+
+/* ---- Light 模式（备选）---- */
+.light {
+  --background: rgb(243 246 248);
+  --surface: rgb(255 255 255);
+  --surface-hover: rgb(245 248 250);
+  --elevated: rgb(255 255 255);
+
+  --border: rgb(226 232 238);
+  --border-strong: rgb(203 213 223);
+
+  --foreground: rgb(23 32 42);
+  --text-secondary: rgb(102 120 138);
+  --text-tertiary: rgb(138 150 165);
+
+  --brand: rgb(15 165 127);
+  --brand-foreground: rgb(255 255 255);
+  --brand-tint: rgb(227 251 244);
+  --warning: rgb(180 125 14);
+  --danger: rgb(217 59 51);
+
+  --converted: rgb(139 124 246);
+  --converted-light: rgb(169 150 249);
+
+  --overlay: rgb(4 6 9 / 0.6);
+
+  /* 契约变量跟随语义令牌，无需逐个重写（继承 :root 的 var 映射） */
+  --muted-foreground: var(--text-secondary);
+  --destructive-foreground: rgb(255 255 255);
 }
 
 @theme inline {
@@ -186,34 +277,16 @@
 
 :root {
   --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Inter", sans-serif;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.145 0 0);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.97 0.005 264);
-  --secondary-foreground: oklch(0.30 0.03 264);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.95 0.015 264);
-  --accent-foreground: oklch(0.30 0.03 264);
-  --brand: oklch(0.80 0.16 76);
-  --brand-foreground: oklch(0.23 0.03 264);
-  --brand-tint: oklch(0.96 0.04 76);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.23 0.03 264);
-  --chart-1: oklch(0.80 0.16 76);
-  --chart-2: oklch(0.55 0.18 240);
-  --chart-3: oklch(0.65 0.15 180);
-  --chart-4: oklch(0.72 0.16 60);
-  --chart-5: oklch(0.6 0.2 10);
-  --radius: 0.375rem;
-  --radius-4xl: 1.125rem;
+
+  /* 图表色（Pixso chart-1~5） */
+  --chart-1: rgb(45 212 168);
+  --chart-2: rgb(139 124 246);
+  --chart-3: rgb(56 189 248);
+  --chart-4: rgb(245 185 61);
+  --chart-5: rgb(244 86 78);
+
+  /* shadcn 基准圆角 = Pixso radius/md 10px */
+  --radius: 10px;
 
   /* iOS HIG 阴影系统 */
   --shadow-ios-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
@@ -226,52 +299,14 @@
   --ease-ios-out: cubic-bezier(0.0, 0.0, 0.2, 1);
   --ease-ios-in-out: cubic-bezier(0.4, 0.0, 0.2, 1);
 
-  --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.23 0.03 264);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.96 0.04 76);
-  --sidebar-accent-foreground: oklch(0.23 0.03 264);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.23 0.03 264);
+  /* 注：语义色与 sidebar 系列已在上方「设计令牌 · 语义层」的 :root 中
+     由 Pixso 令牌统一定义，此处不再重复。旧的 oklch 主题值已于
+     2026-08-31 全部删除（用户要求：完全采用新设计令牌）。 */
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.72 0.02 264);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.27 0.01 264);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.30 0.02 264);
-  --accent-foreground: oklch(0.985 0 0);
-  --brand: oklch(0.80 0.16 76);
-  --brand-foreground: oklch(0.985 0 0);
-  --brand-tint: oklch(0.30 0.05 76);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.72 0.02 264);
-  --chart-1: oklch(0.80 0.16 76);
-  --chart-2: oklch(0.55 0.18 240);
-  --chart-3: oklch(0.65 0.15 180);
-  --chart-4: oklch(0.72 0.16 60);
-  --chart-5: oklch(0.6 0.2 10);
-  --sidebar: oklch(0.145 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.72 0.02 264);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.30 0.05 76);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.72 0.02 264);
-}
+/* .dark 规则已于 2026-08-31 删除：Dark 现为默认模式（Pixso「Dark 优先」），
+   语义值直接定义在上方 :root 中；Light 由 .light 类提供。
+   .dark 类名仍用作 Tailwind dark: 变体的开关标记，但不再承载任何变量定义。 */
 
 @layer base {
   * {
