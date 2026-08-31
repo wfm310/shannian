@@ -60,10 +60,16 @@
     ".build-v8/types/**/*.ts",
     ".build-v8/dev/types/**/*.ts",
     ".build-v9/types/**/*.ts",
-    ".build-v9/dev/types/**/*.ts"
+    ".build-v9/dev/types/**/*.ts",
+    ".build-v10/types/**/*.ts",
+    ".build-v10/dev/types/**/*.ts",
+    ".build-w1/types/**/*.ts",
+    ".build-w1/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
-    "项目文档"
+    "项目文档",
+    ".build-*",
+    ".next*"
   ]
 }

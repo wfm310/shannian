@@ -1,7 +1,12 @@
 // 导航配置（PC Dock / APP Tabbar 共用）
 //
-// 图标名与顺序对齐 Pixso 画板「PC · 对标拆解列表 1920×HUG」的 Dock 结构
-// （节点 40:279）。后续各页面的 Dock 均引用同一份配置，避免各写一套。
+// 图标与顺序对齐 Pixso 画板「PC · 对标拆解列表 1920×HUG」的 Dock（40:279）
+// 路由清单以「项目实际存在的页面」为准，避免指向不存在的路由造成 404。
+//
+// 项目现有页面（src/app 下的目录）：
+//   /  /benchmark  /dashboard  /flash-thought  /inspiration  /knowledge-base
+//   /notification  /produce-flow  /publish  /qa-collect  /review
+//   /script-template  /todo  /topic-library
 
 import type { LucideIcon } from "lucide-react"
 import {
@@ -19,7 +24,7 @@ import {
   Network,
   HelpCircle,
   FileText,
-  Settings,
+  Bell,
 } from "lucide-react"
 
 export interface NavItem {
@@ -30,7 +35,7 @@ export interface NavItem {
   icon: LucideIcon
 }
 
-/** 主导航（Dock 上半区，9 项） */
+/** 主导航（Dock 上半区，8 项） */
 export const MAIN_NAV: NavItem[] = [
   { label: "首页", href: "/", icon: LayoutDashboard },
   { label: "今日待办", href: "/todo", icon: CheckSquare },
@@ -42,7 +47,7 @@ export const MAIN_NAV: NavItem[] = [
   { label: "制作发布", href: "/publish", icon: Send },
 ]
 
-/** 「更多」里的次级模块 */
+/** 「更多」里的次级模块（5 项） */
 export const MORE_NAV: NavItem[] = [
   { label: "数据追踪", href: "/dashboard", icon: BarChart3 },
   { label: "复盘记录", href: "/review", icon: ClipboardCheck },
@@ -51,12 +56,16 @@ export const MORE_NAV: NavItem[] = [
   { label: "脚本框架", href: "/script-template", icon: FileText },
 ]
 
-/** 底部区域（分隔线以下） */
-export const FOOTER_NAV: NavItem[] = [
-  { label: "设置", href: "/settings", icon: Settings },
-]
+/** 消息通知入口（Topbar 铃铛与 Dock 均可引用） */
+export const NOTIFICATION_NAV: NavItem = {
+  label: "消息通知",
+  href: "/notification",
+  icon: Bell,
+}
 
 /** 供「更多」判断：当前路由是否属于次级模块 */
 export function isMoreActive(pathname: string): boolean {
   return MORE_NAV.some((item) => pathname.startsWith(item.href))
 }
+
+export { MoreHorizontal }

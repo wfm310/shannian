@@ -1,0 +1,20 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/benchmark/page": "app/benchmark/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/flash-thought/page": "app/flash-thought/page.js",
+  "/icon.svg/route": "app/icon.svg/route.js",
+  "/inspiration/page": "app/inspiration/page.js",
+  "/knowledge-base/page": "app/knowledge-base/page.js",
+  "/notification/page": "app/notification/page.js",
+  "/page": "app/page.js",
+  "/produce-flow/page": "app/produce-flow/page.js",
+  "/publish/page": "app/publish/page.js",
+  "/qa-collect/page": "app/qa-collect/page.js",
+  "/review/page": "app/review/page.js",
+  "/script-template/page": "app/script-template/page.js",
+  "/todo/page": "app/todo/page.js",
+  "/topic-library/page": "app/topic-library/page.js"
+}

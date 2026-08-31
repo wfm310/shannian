@@ -12,29 +12,55 @@
 //     选中   背景 brand-tint #0E2A22 · 图标与文字 brand #2DD4A8 · 文字 700
 //   分隔线   176×1 · 背景 border #232B38
 //   底部头像 24×24 圆形 · 用户名 13px · 文字 text-primary #EDF2F8
+//
+// 「更多」为次级模块下拉入口（数据追踪 / 复盘记录 / 知识图谱 /
+// 问答收集 / 脚本框架），否则这些页面在 Dock 上不可达。
 
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { ChevronDown, MoreHorizontal } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { MAIN_NAV, MORE_NAV, FOOTER_NAV, isMoreActive } from "./nav-config"
+import { MAIN_NAV, MORE_NAV, NOTIFICATION_NAV, isMoreActive } from "./nav-config"
 
 interface PcDockProps {
-  /** 当前用户名（头像首字母取第一个字） */
+  /** 当前用户名（头像首字母） */
   userName?: string
-  /** 头像背景色，默认靛蓝 #6366F1（设计稿中「峰岚」的头像色） */
+  /** 头像背景色 */
   avatarColor?: string
+  /** 未读消息数（显示红点） */
+  unreadCount?: number
   className?: string
 }
 
 export function PcDock({
   userName = "峰岚",
   avatarColor = "#6366F1",
+  unreadCount = 0,
   className,
 }: PcDockProps) {
   const pathname = usePathname()
   const moreActive = isMoreActive(pathname)
+  const [moreOpen, setMoreOpen] = useState(false)
+  const moreRef = useRef<HTMLDivElement>(null)
+
+  // 点击外部关闭「更多」下拉
+  useEffect(() => {
+    if (!moreOpen) return
+    const onPointerDown = (e: MouseEvent) => {
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
+        setMoreOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", onPointerDown)
+    return () => document.removeEventListener("mousedown", onPointerDown)
+  }, [moreOpen])
+
+  // 路由变化后收起下拉
+  useEffect(() => {
+    setMoreOpen(false)
+  }, [pathname])
 
   return (
     <aside
@@ -44,117 +70,112 @@ export function PcDock({
       )}
     >
       {/* 品牌区 */}
-      <div className="flex flex-col items-center gap-1">
+      <Link href="/" className="flex flex-col items-center gap-1">
         <div className="size-12 rounded-xl bg-brand-500" />
         <span className="text-[11px] text-text-secondary">闪念</span>
-      </div>
+      </Link>
 
       {/* 主导航 */}
       <nav className="mt-4 flex flex-col gap-1">
-        {MAIN_NAV.map((item) => {
-          const active = pathname === item.href
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex h-8 w-[176px] items-center gap-2 rounded-lg px-2 transition-colors",
-                active
-                  ? "bg-brand-tint text-brand-500"
-                  : "text-text-secondary hover:bg-surface-hover"
-              )}
-            >
-              <item.icon
-                className={cn(
-                  "size-5 shrink-0",
-                  active ? "text-brand-500" : "text-text-tertiary"
-                )}
-              />
-              <span
-                className={cn(
-                  "text-[13px]",
-                  active ? "font-bold text-brand-500" : "font-normal"
-                )}
-              >
-                {item.label}
-              </span>
-            </Link>
-          )
-        })}
-
-        {/* 更多（次级模块） */}
-        <div
-          className={cn(
-            "flex h-8 w-[176px] items-center gap-2 rounded-lg px-2 transition-colors",
-            moreActive ? "bg-brand-tint text-brand-500" : "text-text-secondary"
-          )}
-        >
-          <MoreHorizontal
-            className={cn(
-              "size-5 shrink-0",
-              moreActive ? "text-brand-500" : "text-text-tertiary"
-            )}
+        {MAIN_NAV.map((item) => (
+          <NavLink
+            key={item.href}
+            item={item}
+            active={pathname === item.href}
           />
-          <span
+        ))}
+
+        {/* 更多（次级模块下拉） */}
+        <div ref={moreRef} className="relative">
+          <button
+            type="button"
+            onClick={() => setMoreOpen((v) => !v)}
+            aria-expanded={moreOpen}
             className={cn(
-              "text-[13px]",
-              moreActive ? "font-bold text-brand-500" : "font-normal"
+              "flex h-8 w-[176px] items-center gap-2 rounded-lg px-2 transition-colors",
+              moreActive || moreOpen
+                ? "bg-brand-tint text-brand-500"
+                : "text-text-secondary hover:bg-surface-hover"
             )}
           >
-            更多
-          </span>
-          <ChevronDown
-            className={cn(
-              "ml-auto size-4",
-              moreActive ? "text-brand-500" : "text-text-tertiary"
-            )}
-          />
-          {/* 次级模块入口：默认收起，展开后列出 MORE_NAV */}
-          <span className="sr-only">
-            {MORE_NAV.map((n) => n.label).join("、")}
-          </span>
+            <MoreHorizontal
+              className={cn(
+                "size-5 shrink-0",
+                moreActive || moreOpen ? "text-brand-500" : "text-text-tertiary"
+              )}
+            />
+            <span
+              className={cn(
+                "text-[13px]",
+                moreActive || moreOpen ? "font-bold text-brand-500" : "font-normal"
+              )}
+            >
+              更多
+            </span>
+            <ChevronDown
+              className={cn(
+                "ml-auto size-4 transition-transform",
+                moreOpen && "rotate-180",
+                moreActive || moreOpen ? "text-brand-500" : "text-text-tertiary"
+              )}
+            />
+          </button>
+
+          {moreOpen && (
+            <div className="absolute left-0 top-9 z-50 flex w-[176px] flex-col gap-1 rounded-xl border border-border bg-elevated p-2 shadow-lg">
+              {MORE_NAV.map((item) => (
+                <NavLink
+                  key={item.href}
+                  item={item}
+                  active={pathname.startsWith(item.href)}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </nav>
 
       {/* 底部区 */}
       <div className="mt-auto flex flex-col gap-1">
         <div className="mx-auto h-px w-[176px] bg-border" />
-        {FOOTER_NAV.map((item) => {
-          const active = pathname === item.href
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex h-8 w-[176px] items-center gap-2 rounded-lg px-2 transition-colors",
-                active
-                  ? "bg-brand-tint text-brand-500"
-                  : "text-text-secondary hover:bg-surface-hover"
-              )}
-            >
-              <item.icon
-                className={cn(
-                  "size-5 shrink-0",
-                  active ? "text-brand-500" : "text-text-tertiary"
-                )}
-              />
-              <span
-                className={cn(
-                  "text-[13px]",
-                  active ? "font-bold text-brand-500" : "font-normal"
-                )}
-              >
-                {item.label}
-              </span>
-            </Link>
-          )
-        })}
 
-        {/* 个人中心 */}
+        {/* 消息通知（带未读红点） */}
         <Link
-          href="/profile"
-          className="flex h-8 w-[176px] items-center gap-2 rounded-lg px-2 transition-colors hover:bg-surface-hover"
+          href={NOTIFICATION_NAV.href}
+          className={cn(
+            "flex h-8 w-[176px] items-center gap-2 rounded-lg px-2 transition-colors",
+            pathname === NOTIFICATION_NAV.href
+              ? "bg-brand-tint text-brand-500"
+              : "text-text-secondary hover:bg-surface-hover"
+          )}
         >
+          <span className="relative shrink-0">
+            <NOTIFICATION_NAV.icon
+              className={cn(
+                "size-5",
+                pathname === NOTIFICATION_NAV.href
+                  ? "text-brand-500"
+                  : "text-text-tertiary"
+              )}
+            />
+            {unreadCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-medium text-white">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </span>
+          <span
+            className={cn(
+              "text-[13px]",
+              pathname === NOTIFICATION_NAV.href ? "font-bold text-brand-500" : "font-normal"
+            )}
+          >
+            {NOTIFICATION_NAV.label}
+          </span>
+        </Link>
+
+        {/* 当前用户（页面尚未实现，暂不可点） */}
+        <div className="flex h-8 w-[176px] items-center gap-2 rounded-lg px-2">
           <span
             className="flex size-6 shrink-0 items-center justify-center rounded-full text-[10px] text-white"
             style={{ backgroundColor: avatarColor }}
@@ -162,8 +183,34 @@ export function PcDock({
             {userName.slice(0, 1)}
           </span>
           <span className="text-[13px] text-foreground">{userName}</span>
-        </Link>
+        </div>
       </div>
     </aside>
+  )
+}
+
+/** 单个导航项 */
+function NavLink({
+  item,
+  active,
+}: {
+  item: { label: string; href: string; icon: typeof MoreHorizontal }
+  active: boolean
+}) {
+  return (
+    <Link
+      href={item.href}
+      className={cn(
+        "flex h-8 w-[176px] items-center gap-2 rounded-lg px-2 transition-colors",
+        active ? "bg-brand-tint text-brand-500" : "text-text-secondary hover:bg-surface-hover"
+      )}
+    >
+      <item.icon
+        className={cn("size-5 shrink-0", active ? "text-brand-500" : "text-text-tertiary")}
+      />
+      <span className={cn("text-[13px]", active ? "font-bold text-brand-500" : "font-normal")}>
+        {item.label}
+      </span>
+    </Link>
   )
 }
