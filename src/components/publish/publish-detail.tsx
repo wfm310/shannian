@@ -65,7 +65,7 @@ export function PublishDetail({
   const { loadDraft, clearDraft } = useAutoSave(
     `publish-draft-${recordId}`,
     draftData,
-    open && record?.status === "draft"
+    open && record?.status === "pending"
   )
 
   // ----- 打开时加载所有数据 -----
@@ -83,7 +83,7 @@ export function PublishDetail({
 
       // 2. 恢复草稿或加载已保存数据
       const draft = loadDraft()
-      if (draft && r.status === "draft") {
+      if (draft && r.status === "pending") {
         setTitle(draft.title || r.title)
         setDescription(draft.description || r.description)
         setHashtags(draft.hashtags || r.hashtags || [])
@@ -97,8 +97,8 @@ export function PublishDetail({
         setVideoUrl(r.videoUrl)
       }
 
-      // 3. 加载关联的生产任务标题
-      const task = await db.productions.get(r.productionId)
+      // 3. 加载关联的生产任务标题（即兴发布无关联生产任务）
+      const task = r.productionId ? await db.productions.get(r.productionId) : undefined
       if (mounted) setProductionTitle(task?.title || "")
 
       // 4. 加载标签库
@@ -194,7 +194,7 @@ export function PublishDetail({
 
   if (!record) return null
 
-  const isDraft = record.status === "draft"
+  const isDraft = record.status === "pending"
   const isPublished = record.status === "published"
 
   return (

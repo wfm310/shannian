@@ -10,10 +10,10 @@ import type { Benchmark, BenchmarkStatus } from "@/lib/db"
 import { ChevronRight, User } from "lucide-react"
 
 const statusDotClass: Record<BenchmarkStatus, string> = {
-  pending: "bg-muted-foreground/40",
-  in_progress: "bg-amber-500",
-  completed: "bg-emerald-500",
+  disassembling: "bg-amber-500",
+  disassembled: "bg-emerald-500",
   converted: "bg-indigo-500",
+  archived: "bg-muted-foreground/40",
 }
 
 interface BenchmarkListProps {

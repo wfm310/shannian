@@ -184,21 +184,15 @@ function BenchmarkPage() {
   const handleNext = useCallback(() => {
     if (selectedId === null || benchmarks.length === 0) return
     const currentIndex = benchmarks.findIndex(b => b.id === selectedId)
-    // 先找当前位置之后的待拆解
-    let next = benchmarks.find((b, i) => i > currentIndex && b.status === "pending")
+    // 找下一条待拆解（新模型下 disassembling 涵盖原「待拆解 / 拆解中」）
+    let next = benchmarks.find((b, i) => i > currentIndex && b.status === "disassembling")
     if (!next) {
-      next = benchmarks.find(b => b.status === "pending")
+      next = benchmarks.find(b => b.status === "disassembling")
     }
     if (next) {
       handleSelect(next.id!)
     } else {
-      next = benchmarks.find((b, i) => i > currentIndex && b.status === "in_progress")
-      if (!next) next = benchmarks.find(b => b.status === "in_progress")
-      if (next) {
-        handleSelect(next.id!)
-      } else {
-        toast.info("没有待拆解的视频了")
-      }
+      toast.info("没有待拆解的视频了")
     }
   }, [selectedId, benchmarks, handleSelect])
 

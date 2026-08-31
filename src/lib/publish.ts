@@ -84,7 +84,7 @@ export const tagCategoryOrder: TagCategory[] = ["track", "content", "audience", 
 // ========== 状态标签 ==========
 
 export const statusLabels: Record<PublishStatus, string> = {
-  draft: "草稿",
+  pending: "待发布",
   published: "已发布",
 }
 
@@ -139,7 +139,15 @@ export async function createPublishRecord(productionId: string): Promise<string>
     fullContent,
     publishTime: null,
     videoUrl: "",
-    status: "draft",
+    status: "pending",
+    platform: "douyin",
+    mode: "standard",
+    trackingStatus: "pending_tracking",
+    topicId: task.topicId,
+    frameworkId: task.frameworkId,
+    inspirationId: null,
+    archived: false,
+    archivedAt: null,
     assignee: CURRENT_USER,
     createdAt: now,
     ...newSyncFields(),

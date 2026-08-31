@@ -62,8 +62,8 @@ export async function createProductionTask(
     }
     // 任务标题继承选题标题
     title = topic.topicTitle
-    // 更新选题状态为"生产中"
-    await db.topics.update(topicId, { status: "in_production", ...touchSyncFields(topic.syncVersion || 0) })
+    // 更新选题状态为"已生产"
+    await db.topics.update(topicId, { status: "produced", ...touchSyncFields(topic.syncVersion || 0) })
     pendingStages = []
   } else {
     // 即兴模式：标题默认"即兴创作"，首次保存文案时自动更新
@@ -194,11 +194,11 @@ export async function advanceStage(id: string): Promise<void> {
   if (nextStage === "published") {
     updates.publishedAt = now
     updates.status = "completed"
-    // 更新选题状态为"已发布"
+    // 更新选题状态为"已生产"（10 文档无「已发布」态，生产完成即 produced）
     if (task.topicId) {
       const topic = await db.topics.get(task.topicId)
       if (topic) {
-        await db.topics.update(task.topicId, { status: "published", ...touchSyncFields(topic.syncVersion || 0) })
+        await db.topics.update(task.topicId, { status: "produced", ...touchSyncFields(topic.syncVersion || 0) })
       }
     }
   }
@@ -324,7 +324,11 @@ export async function createAndLinkTopic(
     contentPositioning: "",
     priorityScore: 0,
     priorityLevel: "reserve",
-    status: "in_production",
+    status: "produced",
+    tags: [],
+    shelveReason: "",
+    archived: false,
+    archivedAt: null,
     ...newSyncFields(),
     updatedAt: now,
   })

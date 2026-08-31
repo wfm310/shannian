@@ -91,7 +91,8 @@ export function ProductionDetail({
 
       const topicList = await getTopics()
       if (!mounted) return
-      setTopics(topicList.filter(tp => tp.status !== "published"))
+      // 过滤掉已进入终态的选题（10 文档：produced / shelved / abandoned 为不可再选态）
+      setTopics(topicList.filter(tp => tp.status !== "produced" && tp.status !== "shelved" && tp.status !== "abandoned"))
 
       if (t.topicId) {
         const topic = await db.topics.get(t.topicId)

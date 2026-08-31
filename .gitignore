@@ -45,6 +45,7 @@ next-env.d.ts
 .codebuddy/
 .vscode/
 .idea/
+.trae/
 
 # Windows 快捷方式（误入源码目录的垃圾文件）
 *.lnk
@@ -56,3 +57,11 @@ next-env.d.ts
 /.build-tmp3/
 /.build-tmp4/
 /.build-tmp*/
+/.build-verify/
+
+# Pixso 导出的样式系统总览（含 35MB 字体与生成代码，仅作色值参考，不入库）
+/项目文档/闪念 Pro · 样式系统总览/
+/项目文档/*.zip
+
+# 旧文档目录（已被 项目文档/ 取代，待移出）
+/项目文档整理/

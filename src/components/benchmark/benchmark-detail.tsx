@@ -47,10 +47,11 @@ type DimensionKey = typeof DIMENSIONS[number]["key"]
 // ========== 状态圆点颜色 ==========
 function statusDotClass(status: BenchmarkStatus): string {
   switch (status) {
-    case "pending": return "bg-muted-foreground/40"
-    case "in_progress": return "bg-amber-500"
-    case "completed": return "bg-emerald-500"
+    // 新模型：待拆解与拆解中已合并为 disassembling
+    case "disassembling": return "bg-amber-500"
+    case "disassembled": return "bg-emerald-500"
     case "converted": return "bg-indigo-500"
+    case "archived": return "bg-muted-foreground/40"
     default: return "bg-muted-foreground/40"
   }
 }
@@ -893,10 +894,10 @@ export function BenchmarkDetail({
   // 初始化数据
   useEffect(() => {
     setEditData({ ...benchmark })
-    // 如果是待拆解状态，自动开始拆解
-    if (benchmark.status === "pending") {
+    // 拆解中且尚未记录开始时间时，自动标记开始拆解
+    if (benchmark.status === "disassembling") {
       startDisassembly(benchmark.id!).then(() => {
-        onUpdate(benchmark.id!, { status: "in_progress" })
+        onUpdate(benchmark.id!, { status: "disassembling" })
       })
     }
   }, [benchmark.id])

@@ -20,10 +20,12 @@ export const topicSourceConfig: Record<TopicSource, { label: string }> = {
 
 // 选题状态配置（中文 + Badge variant）
 export const topicStatusConfig: Record<TopicStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  reserve: { label: "储备", variant: "outline" },
-  pending_production: { label: "待生产", variant: "default" },
-  in_production: { label: "生产中", variant: "secondary" },
-  published: { label: "已发布", variant: "secondary" },
+  draft: { label: "草稿", variant: "outline" },
+  pending_evaluation: { label: "待评估", variant: "default" },
+  confirmed: { label: "已确认", variant: "secondary" },
+  produced: { label: "已生产", variant: "secondary" },
+  shelved: { label: "已搁置", variant: "outline" },
+  abandoned: { label: "已放弃", variant: "outline" },
 }
 
 // 定位匹配度配置（中文 + 分值 + 描述）满分 40 分
@@ -104,8 +106,9 @@ export function calculatePriority(
  * 根据优先级星级确定选题状态
  */
 export function determineStatus(level: PriorityLevel): TopicStatus {
-  if (level === "reserve") return "reserve"
-  return "pending_production"
+  // 优先级为"储备"的选题进入草稿态，等待评估；其余进入待评估
+  if (level === "reserve") return "draft"
+  return "pending_evaluation"
 }
 
 
@@ -135,7 +138,11 @@ function createDefaultTopic(
     contentPositioning: "",
     priorityScore: 0,
     priorityLevel: "reserve",
-    status: "reserve",
+    status: "draft",
+    tags: [],
+    shelveReason: "",
+    archived: false,
+    archivedAt: null,
     ...newSyncFields(),
     updatedAt: Date.now(),
   }

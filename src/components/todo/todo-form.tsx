@@ -193,7 +193,7 @@ export function TodoForm({ open, onOpenChange }: TodoFormProps) {
     if (linkedModules.includes("benchmark")) {
       const allBenchmarks = await db.benchmarks.toArray()
       const completedCount = allBenchmarks.filter(
-        bm => bm.status === "completed" || bm.status === "converted"
+        bm => bm.status === "disassembled" || bm.status === "converted"
       ).length
       progressBaselineRecord.benchmark = completedCount
     }

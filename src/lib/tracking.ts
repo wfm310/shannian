@@ -38,6 +38,8 @@ export const displayNodeOrder: TrackingNode[] = ["24h", "3d", "7d", "30d", "cust
 export const statusLabels: Record<TrackingStatus, string> = {
   pending: "待录入",
   recorded: "已录入",
+  delayed: "延迟录入",
+  skipped: "已跳过",
 }
 
 

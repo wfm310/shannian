@@ -17,7 +17,7 @@ import { Plus, UploadCloud } from "lucide-react"
 // ========== 筛选 Tab 配置 ==========
 const filterTabs: { value: PublishStatus | "all"; label: string }[] = [
   { value: "all", label: "全部" },
-  { value: "draft", label: "草稿" },
+  { value: "pending", label: "待发布" },
   { value: "published", label: "已发布" },
 ]
 

@@ -18,10 +18,10 @@ export const sourceChannelConfig: Record<string, { label: string }> = {
 
 // 状态配置（中文 + Badge variant）
 export const statusConfig: Record<BenchmarkStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  pending: { label: "待拆解", variant: "outline" },
-  in_progress: { label: "拆解中", variant: "default" },
-  completed: { label: "已拆解", variant: "secondary" },
+  disassembling: { label: "拆解中", variant: "default" },
+  disassembled: { label: "已拆解", variant: "secondary" },
   converted: { label: "已转化", variant: "outline" },
+  archived: { label: "已归档", variant: "outline" },
 }
 
 // 需求类型中文映射
@@ -124,7 +124,7 @@ function createDefaultBenchmark(
     assignee,
     assigneeHistory: [],
     videoScript,
-    status: "pending",
+    status: "disassembling",
 
     // 维度1：人群维度（默认空字符串，用户填写）
     audienceIdentity: "",
@@ -308,16 +308,21 @@ export async function updateBenchmark(
 
 
 /**
- * 开始拆解（状态从"待拆解"变"拆解中"）
+ * 开始拆解（记录拆解开始时间）
  * @param id - 记录 id
+ *
+ * 注：新模型下「待拆解」与「拆解中」已合并为 disassembling
+ * （07 文档 §3：状态跟随拆解进度自动更新，不可自主编辑），
+ * 本函数保留的意义是记录首次开始拆解的时间戳。
  */
 export async function startDisassembly(id: string): Promise<void> {
   const current = await db.benchmarks.get(id)
   if (!current) return
-  if (current.status !== "pending") return
+  if (current.status !== "disassembling") return
+  if (current.disassemblyStartTime) return // 已开始过，不重复记录
 
   await db.benchmarks.update(id, {
-    status: "in_progress",
+    status: "disassembling",
     disassemblyStartTime: Date.now(),
   } as any)
   // 状态变了，通知待办刷新进度

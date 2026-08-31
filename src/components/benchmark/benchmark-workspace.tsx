@@ -56,10 +56,11 @@ type DimensionKey = typeof DIMENSIONS[number]["key"]
 // ========== 状态圆点颜色（与 benchmark-list 统一，使用语义色） ==========
 function statusDotClass(status: BenchmarkStatus): string {
   switch (status) {
-    case "pending": return "bg-muted-foreground/40"
-    case "in_progress": return "bg-amber-500"
-    case "completed": return "bg-emerald-500"
+    // 新模型：待拆解与拆解中已合并为 disassembling
+    case "disassembling": return "bg-amber-500"
+    case "disassembled": return "bg-emerald-500"
     case "converted": return "bg-indigo-500"
+    case "archived": return "bg-muted-foreground/40"
     default: return "bg-muted-foreground/40"
   }
 }
@@ -1193,7 +1194,7 @@ export function BenchmarkWorkspace({
       try {
         const draftKey = `benchmark-draft-${benchmark.id}`
         const draft = localStorage.getItem(draftKey)
-        if (draft && benchmark.status !== "completed" && benchmark.status !== "converted") {
+        if (draft && benchmark.status !== "disassembled" && benchmark.status !== "converted") {
           const parsed = JSON.parse(draft)
           setEditData(parsed)
           toast.info("已恢复未保存的草稿")
@@ -1211,9 +1212,9 @@ export function BenchmarkWorkspace({
   }, [benchmark?.id, benchmark?.status, benchmark?.assignee])
 
   const isAssignee = editData?.assignee === currentUser
-  const isReadOnly = !isAssignee || editData?.status === "completed" || editData?.status === "converted"
-  const isPending = editData?.status === "pending"
-  const isCompleted = editData?.status === "completed"
+  const isReadOnly = !isAssignee || editData?.status === "disassembled" || editData?.status === "converted"
+  const isPending = editData?.status === "disassembling"
+  const isCompleted = editData?.status === "disassembled"
   const isConverted = editData?.status === "converted"
 
   // 自动保存草稿到 localStorage
@@ -1284,7 +1285,7 @@ export function BenchmarkWorkspace({
     try {
       await onUpdate(editData.id, editData)
       await onUpdate(editData.id, {
-        status: "completed" as BenchmarkStatus,
+        status: "disassembled" as BenchmarkStatus,
         disassemblyCompleteTime: Date.now(),
       })
       clearDraft(editData.id)
@@ -1985,10 +1986,10 @@ function DesktopContentDimension({
 
 function statusBadgeClass(status: BenchmarkStatus): string {
   switch (status) {
-    case "pending": return "bg-muted text-muted-foreground"
-    case "in_progress": return "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-    case "completed": return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+    case "disassembling": return "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+    case "disassembled": return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
     case "converted": return "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
+    case "archived": return "bg-muted text-muted-foreground"
     default: return ""
   }
 }

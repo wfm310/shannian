@@ -397,7 +397,10 @@ export function TrackingVideoDetail({
                 <div className="text-xs text-muted-foreground mb-1">搜索进入词</div>
                 <div className="flex flex-wrap gap-1.5">
                   {keywordsIn.length > 0 ? keywordsIn.map((kw, i) => (
-                    <Badge key={i} variant="secondary" className="text-xs">{kw}</Badge>
+                    <Badge key={i} variant="secondary" className="text-xs">
+                      {kw.word}
+                      {kw.count > 1 && <span className="ml-1 opacity-60">×{kw.count}</span>}
+                    </Badge>
                   )) : <span className="text-sm text-muted-foreground">暂无</span>}
                 </div>
               </div>
@@ -405,7 +408,10 @@ export function TrackingVideoDetail({
                 <div className="text-xs text-muted-foreground mb-1">搜索离开词</div>
                 <div className="flex flex-wrap gap-1.5">
                   {keywordsOut.length > 0 ? keywordsOut.map((kw, i) => (
-                    <Badge key={i} variant="outline" className="text-xs">{kw}</Badge>
+                    <Badge key={i} variant="outline" className="text-xs">
+                      {kw.word}
+                      {kw.count > 1 && <span className="ml-1 opacity-60">×{kw.count}</span>}
+                    </Badge>
                   )) : <span className="text-sm text-muted-foreground">暂无</span>}
                 </div>
               </div>

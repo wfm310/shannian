@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { updateTrackingRecord, calculateRates, trackingNodeConfig } from "@/lib/tracking"
-import type { TrackingRecord } from "@/lib/db"
+import type { TrackingRecord, SearchKeyword } from "@/lib/db"
 import { Loader2, Save } from "lucide-react"
 
 
@@ -63,9 +63,23 @@ function parseNumber(s: string): number | null {
   return isNaN(n) ? null : n
 }
 
-function parseKeywords(s: string | undefined | null): string[] {
+// 解析关键词输入为「词 + 频次」结构（14 文档 §3.4）
+// 支持两种写法：纯词（频次默认 1）或 "词:频次"
+function parseKeywords(s: string | undefined | null): SearchKeyword[] {
   if (!s) return []
-  return s.split(",").map(k => k.trim()).filter(Boolean)
+  return s
+    .split(",")
+    .map(raw => raw.trim())
+    .filter(Boolean)
+    .map(item => {
+      const idx = item.lastIndexOf(":")
+      if (idx > 0) {
+        const count = Number(item.slice(idx + 1).trim())
+        const word = item.slice(0, idx).trim()
+        if (word && Number.isFinite(count)) return { word, count }
+      }
+      return { word: item, count: 1 }
+    })
 }
 
 function getNodeLabel(record: TrackingRecord): string {

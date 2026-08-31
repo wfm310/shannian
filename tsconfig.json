@@ -44,9 +44,12 @@
     ".build-tmp3/types/**/*.ts",
     ".build-tmp3/dev/types/**/*.ts",
     ".build-tmp4/types/**/*.ts",
-    ".build-tmp4/dev/types/**/*.ts"
+    ".build-tmp4/dev/types/**/*.ts",
+    ".build-verify/types/**/*.ts",
+    ".build-verify/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "项目文档"
   ]
 }

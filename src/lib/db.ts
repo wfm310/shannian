@@ -137,8 +137,12 @@ export interface FlashThought {
 // pending：待拆解（刚录入，没开始拆）
 // in_progress：拆解中（正在拆，没拆完）
 // completed：已拆解（五个维度都填完了）
-// converted：已转化（已转成选题/灵感，终态）
-type BenchmarkStatus = "pending" | "in_progress" | "completed" | "converted"
+// 对标拆解状态（对齐 项目文档/07-对标拆解.md §3 状态流转）
+// disassembling：拆解中（列表页快速记录后默认，四维度未完成）
+// disassembled：已拆解（四维度完成，可进入转化区）
+// converted：已转化（已转成选题库/灵感记录，终态，紫 139,124,246）
+// archived：已归档（全局无删除，归档为唯一终态）
+type BenchmarkStatus = "disassembling" | "disassembled" | "converted" | "archived"
 
 // 来源渠道
 // recommend：推荐页
@@ -277,6 +281,11 @@ export interface Benchmark {
   createdAt: number                     // 记录时间
   convertedTargets: string[]            // 已转化目标
   convertedIds: ConvertedIds            // 转化关联 ID
+
+  // ===== 归档（总纲规则 7：全局无删除，归档为唯一终态）=====
+  archived?: boolean                    // 是否已归档（缺省 false）
+  archivedAt?: number | null            // 归档时间
+
   // ===== 同步字段 =====
   updatedAt: number                     // 最后更新时间
   synced: boolean                       // 是否已同步到云端
@@ -294,12 +303,20 @@ export interface Benchmark {
 // other：其他
 type TopicSource = "manual" | "benchmark" | "qa" | "inspiration" | "review" | "other"
 
-// 选题状态
-// reserve：储备（暂不生产）
-// pending_production：待生产（优先级为立即做或排期做）
-// in_production：生产中（内容生产已关联，第13课实现）
-// published：已发布（内容已发布，第13课实现）
-type TopicStatus = "reserve" | "pending_production" | "in_production" | "published"
+// 选题状态（对齐 项目文档/10-选题库.md §3，6 态）
+// draft：草稿（新建未提交评估）
+// pending_evaluation：待评估（已提交，未完成定位评估）
+// confirmed：已确认（评估通过，可转生产）
+// produced：已生产（已创建内容生产任务）
+// shelved：已搁置（暂不做，需填搁置原因，可恢复）
+// abandoned：已放弃（终态，区别于归档：放弃=内容层面否决）
+type TopicStatus =
+  | "draft"
+  | "pending_evaluation"
+  | "confirmed"
+  | "produced"
+  | "shelved"
+  | "abandoned"
 
 // 定位匹配度
 type MatchLevel = "high" | "medium" | "low"
@@ -341,6 +358,14 @@ export interface Topic {
   priorityScore: number // 优先级得分（3-9，自动计算）
   priorityLevel: PriorityLevel // 优先级星级（自动计算，含一票否决）
   status: TopicStatus // 选题状态（自动关联进度，不可编辑）
+
+  // ===== 10-选题库.md 补充字段（新增列，存量数据允许为空）=====
+  tags?: string[] // 标签（选题分类用，对齐对标拆解的 tags 设计）
+  shelveReason?: string // 搁置原因（status=shelved 时必填，恢复时清空）
+
+  // ===== 归档（总纲规则 7：全局无删除，归档为唯一终态）=====
+  archived?: boolean // 是否已归档（缺省 false）
+  archivedAt?: number | null // 归档时间
 
   // ===== 其他 =====
   updatedAt: number // 更新时间
@@ -484,6 +509,64 @@ interface ScriptStepContent {
   content: string             // 用户写的该步骤文案（初始为空）
 }
 
+// ===== 阶段产出物（对齐 12-内容生产.md §3「阶段产出物要点」）=====
+// 每进入一个阶段，产出物以 JSON 存档，已完成阶段只读
+
+// 素材项（拍摄/制作阶段）
+interface MaterialItem {
+  id: string                  // 素材项 ID
+  name: string                // 素材名称
+  type: MaterialType          // 素材类型
+  fileRef: string             // 文件引用（R2 URL 或本地路径）
+  duration: number | null     // 时长（秒，视频/音频有）
+  note: string                // 备注
+}
+
+// 素材类型
+type MaterialType = "video" | "audio" | "image" | "text" | "other"
+
+// 成片信息（剪辑阶段）
+interface FinalCut {
+  name: string                // 成片名称
+  fileRef: string             // 文件引用（R2 URL）
+  duration: number | null     // 时长（秒）
+  resolution: string          // 分辨率（如 "1080x1920"）
+  note: string                // 备注
+}
+
+// 各阶段产出物集合
+interface StageOutputs {
+  // 选题确认阶段
+  topic?: {
+    topicId: string | null    // 选题ID
+    titleSnapshot: string     // 标题快照
+    source: TopicSource | "impromptu" // 来源（选题库 / 即兴创作）
+    copyRefSnapshot: string   // 内容参考快照
+    needFill: boolean         // 是否待补填（即兴模式为 true）
+  }
+  // 脚本撰写阶段
+  script?: {
+    frameworkId: string | null // 框架ID
+    frameworkVersion: string   // 版本号（版本锁定）
+    structureSnapshot: string  // 结构快照（框架步骤的 JSON 字符串）
+    scriptContent: string      // 脚本内容（按框架步骤填入的完整文案）
+  }
+  // 拍摄/制作阶段
+  material?: {
+    items: MaterialItem[]      // 素材列表
+  }
+  // 剪辑阶段
+  editing?: {
+    finalCut: FinalCut | null  // 成片信息
+  }
+  // 发布移交阶段
+  handoff?: {
+    handedOffAt: number | null // 移交时间
+    publishRecordId: string | null // 制作发布记录ID
+    publishConfirmedAt: number | null // 发布确认时间（回写）
+  }
+}
+
 // ========== 内容生产流程接口 ==========
 export interface ProductionTask {
   id?: string                        // 主键，UUID
@@ -496,9 +579,16 @@ export interface ProductionTask {
   currentStage: ProductionStage      // 当前阶段
   status: ProductionStatus           // 生产状态
   pendingStages: string[]            // 即兴模式待补填阶段列表（如 ["topic", "framework"]）
-  assignee: string                   // 负责人（固定"峰岚"）
+  stageOutputs?: StageOutputs        // 各阶段产出物（JSON 存档，已完成阶段只读）
+  assignee: string                   // 负责人（动态注册账号；支持转交并记录历史）
+  assigneeHistory?: AssigneeRecord[] // 负责人转交历史（转交后原负责人只读）
   createdAt: number                  // 创建时间（时间戳）
   publishedAt: number | null        // 发布移交时间（未移交为 null）
+
+  // ===== 归档（总纲规则 7）=====
+  archived?: boolean                 // 是否已归档（缺省 false）
+  archivedAt?: number | null         // 归档时间
+
   // ===== 同步字段 =====
   updatedAt: number                  // 最后更新时间
   synced: boolean                    // 是否已同步到云端
@@ -507,10 +597,24 @@ export interface ProductionTask {
 
 // ========== 制作发布接口 ==========
 
-// 发布状态
-// draft：草稿（正在填写，或已填但未发布）
-// published：已发布（已记录视频链接）
-type PublishStatus = "draft" | "published"
+// 发布状态（对齐 13-制作发布.md §5）
+// pending：待发布（创建时无视频链接）
+// published：已发布（填入视频链接后自动流转）
+type PublishStatus = "pending" | "published"
+
+// 发布平台（当前仅抖音，预留多平台）
+type PublishPlatform = "douyin"
+
+// 发布模式（对齐 12-内容生产.md 的生产模式）
+// standard：标准（来自内容生产移交）
+// impromptu：即兴（凭空创建，或从灵感转化）
+type PublishMode = "standard" | "impromptu"
+
+// 数据追踪状态（对齐 13-制作发布.md §5）
+// pending_tracking：待追踪
+// tracking：追踪中
+// reviewed：已复盘
+type PublishTrackingStatus = "pending_tracking" | "tracking" | "reviewed"
 
 // 标题公式类型（仅参考提示，不强制使用）
 type TitleFormula = "T1" | "T2" | "T3" | "T4" | "T5"
@@ -521,17 +625,31 @@ type TagCategory = "track" | "content" | "audience" | "hot"
 // 发布记录
 export interface PublishRecord {
   id?: string                        // 主键，UUID
-  productionId: string              // 关联生产任务ID
-  title: string                      // 发布标题（用户填写，参考公式）
-  titleFormula: TitleFormula | null  // 使用的标题公式（仅参考，可不选）
-  description: string                // 描述文案（简要概括视频内容）
-  hashtags: string[]                 // 话题标签（3+1+1结构，不含 # 号）
-  fullContent: string                // 完整文案内容（从生产任务预填，可编辑）
-  publishTime: number | null         // 发布时间（未发布为 null）
-  videoUrl: string                   // 发布视频链接
-  status: PublishStatus              // 发布状态
-  assignee: string                   // 负责人（固定"峰岚"）
-  createdAt: number                  // 创建时间
+  productionId: string | null        // 关联生产任务ID（标准模式必填；即兴选填，对齐 13 文档 §4）
+  title: string                      // 视频标题（含 1~2 核心搜索词前置）
+  titleFormula: TitleFormula | null  // 标题公式 T1~T5（仅记录留存，选填）
+  description: string                // 描述文案（发布到抖音的简介）
+  hashtags: string[]                 // 话题标签（3+1+1 结构，标签库弹窗勾选，不含 # 号）
+  fullContent: string                // 文案内容（该视频完整文案）
+  platform?: PublishPlatform         // 发布平台（当前仅抖音，缺省 douyin）
+  mode?: PublishMode                 // 发布模式：标准 / 即兴（缺省 standard）
+  publishTime: number | null         // 发布时间（手动填写，精确到时分；与 createdAt 独立）
+  videoUrl: string                   // 视频链接（创建后允许补充一次，唯一可编辑字段）
+  status: PublishStatus              // 发布状态（按视频链接自动流转）
+  trackingStatus?: PublishTrackingStatus // 数据追踪状态（自动，缺省 pending_tracking）
+
+  // ===== 关联字段（对齐 13 文档 §4）=====
+  topicId?: string | null            // 关联选题（即兴可空）
+  frameworkId?: string | null        // 关联脚本框架（只读关联展示）
+  inspirationId?: string | null      // 关联灵感ID（即兴从灵感转化时必填，用于溯源）
+
+  assignee: string                   // 负责人（动态注册账号）
+  createdAt: number                  // 创建时间（自动）
+
+  // ===== 归档（总纲规则 7）=====
+  archived?: boolean                 // 是否已归档（缺省 false）
+  archivedAt?: number | null         // 归档时间
+
   updatedAt: number                  // 更新时间
   // ===== 同步字段 =====
   synced: boolean                    // 是否已同步到云端
@@ -557,10 +675,21 @@ export interface TagLibrary {
 // 2h/24h/3d/7d/30d 是固定节点，custom 是长尾触发的自定义节点
 type TrackingNode = "2h" | "24h" | "3d" | "7d" | "30d" | "custom"
 
-// 追踪状态
-// pending：已创建但未录入数据
-// recorded：已录入数据并保存
-type TrackingStatus = "pending" | "recorded"
+// 节点录入状态（对齐 14-数据追踪.md §2 节点录入状态，4 态）
+// pending：待录入（待办已生成未录入）
+// recorded：已录入（窗口内完成）
+// delayed：延迟录入（超窗口补录；历史基准计算权重 0.5；趋势图空心点标注）
+// skipped：已跳过（用户放弃该节点，停止提醒）
+type TrackingStatus = "pending" | "recorded" | "delayed" | "skipped"
+
+// 数据来源（对齐 14-数据追踪.md §3.5 系统字段）
+type TrackingDataSource = "manual" | "auto"
+
+// 搜索关键词（对齐 14-数据追踪.md §3.4：词 + 频次，跨节点自动去重保留最新频次）
+export interface SearchKeyword {
+  word: string // 搜索词
+  count: number // 频次
+}
 
 // 追踪记录（每条对应一个节点）
 export interface TrackingRecord {
@@ -580,14 +709,17 @@ export interface TrackingRecord {
   completionRate: number | null          // 完播率（%）
   bounceRate2s: number | null            // 2s跳出率（%）
   retention5s: number | null             // 5s完播率（%）
-  // 搜索关键词
-  searchKeywordsIn: string[]             // 用户通过这些词看到作品
-  searchKeywordsOut: string[]            // 用户看完作品后常搜的词
+  // 搜索关键词（词 + 频次，对齐 14 文档 §3.4）
+  searchKeywordsIn: SearchKeyword[]       // 看到作品的搜索词（反映 SEO 与推荐方向）
+  searchKeywordsOut: SearchKeyword[]      // 看完后常搜的词（反映被激发的后续需求）
   // 状态
-  status: TrackingStatus                 // 追踪状态
-  scheduledTime: number                  // 预计追踪时间（发布时间 + 偏移量）
+  status: TrackingStatus                 // 节点录入状态（4 态）
+  dataSource?: TrackingDataSource        // 数据来源：手动 / 自动拉取（缺省 manual）
+  isAbnormal?: boolean                   // 异常标记（自动，14 文档 §5 双向阈值检测，缺省 false）
+  abnormalNotes?: string[]               // 异常项说明（如 "播放量异常高 ≥ 均值×2.0"）
+  scheduledTime: number                  // 预计追踪时间（发布时间 + 节点偏移量）
   recordedAt: number | null              // 实际录入时间
-  assignee: string                       // 负责人（固定"峰岚"）
+  assignee: string                       // 负责人（动态注册账号）
   createdAt: number                      // 创建时间
   updatedAt: number                      // 更新时间
   // ===== 同步字段 =====
@@ -603,8 +735,12 @@ type ReviewType = "single" | "periodic"
 // 复盘周期（周期性复盘必填）
 type ReviewPeriod = "daily" | "weekly" | "monthly"
 
-// 触发方式（本课只实现手动，后续课程扩展自动触发）
-type ReviewTrigger = "manual"
+// 触发方式（对齐 15-复盘记录.md §2.3 与 §3.1，4 值）
+// anomaly：异常触发（14-数据追踪异常检测命中：≥均值×2.0 或 ≤均值×0.5）
+// viral：爆款触发（播放量 > 历史均值 ×3）
+// periodic_auto：周期自动生成（日报 20:00 / 周报周一早上 / 月报每月 1 号）
+// manual：手动创建
+type ReviewTrigger = "anomaly" | "viral" | "periodic_auto" | "manual"
 
 // 复盘状态（三态不可逆：待复盘 → 复盘中 → 已完成）
 type ReviewStatus = "pending" | "in_progress" | "completed"
@@ -654,16 +790,22 @@ export interface ReviewRecord {
   assignee: string                      // 负责人
   status: ReviewStatus                  // 复盘状态
   // 五模块数据
-  dataComment: string                   // 数据简评
-  goodItems: ReviewItem[]               // 做得好的
-  badItems: ReviewItem[]                // 做得不好的
-  experiences: ReviewExperience[]       // 可复用经验
-  actions: ReviewAction[]               // 下一步行动
+  dataSnapshot?: TrackingRecord | null   // 数据快照（触发节点全量数据，只读，对齐 15 文档 §3.2）
+  dataComment: string                   // 数据简评（日报选填，其余必填）
+  goodItems: ReviewItem[]               // 做得好的（维度 + 描述）
+  badItems: ReviewItem[]                // 做得不好的（维度 + 描述）
+  experiences: ReviewExperience[]       // 可复用经验（经验标题+内容+分类+适用场景+标签）
+  actions: ReviewAction[]               // 下一步行动（内容+优先级+截止日期+关联模块+框架迭代标记）
   // 时间戳
   startedAt: number | null              // 开始复盘时间
   completedAt: number | null            // 完成复盘时间
   createdAt: number                      // 创建时间
   updatedAt: number                      // 更新时间
+
+  // ===== 归档（总纲规则 7）=====
+  archived?: boolean                     // 是否已归档（缺省 false）
+  archivedAt?: number | null             // 归档时间
+
   // ===== 同步字段 =====
   synced: boolean                        // 是否已同步到云端
   syncVersion: number                    // 乐观并发版本号
@@ -843,17 +985,17 @@ class ShannianDatabase extends Dexie {
     this.version(1).stores({
       todos: "id, title, initialPriority, assignee, dueDate, status, source, creator, createdAt, completedAt, archived, synced, updatedAt, syncVersion",
       notifications: "id, type, relatedModule, receiver, status, createdAt, synced, updatedAt, syncVersion",
-      flashThoughts: "id, status, categoryTarget, createdAt, processedAt, synced, updatedAt, syncVersion",
-      benchmarks: "id, status, assignee, sourceChannel, createdAt, synced, updatedAt, syncVersion",
-      topics: "id, status, source, priorityLevel, creator, createdAt, synced, updatedAt, syncVersion",
-      qaQuestions: "id, status, source, creator, createdAt, synced, updatedAt, syncVersion",
-      inspirations: "id, status, source, creator, createdAt, updatedAt, synced, syncVersion",
-      scriptTemplates: "id, frameworkType, creator, createdAt, updatedAt, synced, syncVersion",
-      productions: "id, mode, currentStage, status, assignee, createdAt, synced, updatedAt, syncVersion",
-      publishRecords: "id, productionId, status, assignee, createdAt, updatedAt, synced, syncVersion",
-      tagLibrary: "id, category, createdAt, synced, updatedAt, syncVersion",
-      trackingRecords: "id, publishRecordId, node, status, assignee, createdAt, updatedAt, synced, syncVersion",
-      reviewRecords: "id, type, status, assignee, createdAt, completedAt, synced, updatedAt, syncVersion",
+      flashThoughts: "id, status, categoryTarget, createdAt, processedAt, archived, synced, updatedAt, syncVersion",
+      benchmarks: "id, status, assignee, sourceChannel, createdAt, archived, synced, updatedAt, syncVersion",
+      topics: "id, status, source, priorityLevel, creator, createdAt, archived, synced, updatedAt, syncVersion",
+      qaQuestions: "id, status, source, creator, createdAt, archived, synced, updatedAt, syncVersion",
+      inspirations: "id, status, source, creator, createdAt, archived, updatedAt, synced, syncVersion",
+      scriptTemplates: "id, frameworkType, creator, createdAt, archived, updatedAt, synced, syncVersion",
+      productions: "id, mode, currentStage, status, assignee, createdAt, archived, synced, updatedAt, syncVersion",
+      publishRecords: "id, productionId, topicId, frameworkId, inspirationId, status, trackingStatus, platform, mode, assignee, createdAt, archived, updatedAt, synced, syncVersion",
+      tagLibrary: "id, category, createdAt, archived, synced, updatedAt, syncVersion",
+      trackingRecords: "id, publishRecordId, node, status, isAbnormal, scheduledTime, assignee, createdAt, updatedAt, synced, syncVersion",
+      reviewRecords: "id, type, status, trigger, triggerNode, assignee, createdAt, completedAt, archived, synced, updatedAt, syncVersion",
       knowledgeNodes: "id, nodeType, sourceModule, sourceRecordId, createdAt, updatedAt, synced, syncVersion",
       knowledgeEdges: "id, sourceNodeId, targetNodeId, edgeType, createdAt, synced, syncVersion",
       knowledgeNotes: "id, createdAt, updatedAt, synced, syncVersion",

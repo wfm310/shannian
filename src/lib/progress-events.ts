@@ -79,7 +79,7 @@ export async function syncBenchmarkProgressToTodos(): Promise<void> {
   // 1. 统计当前已完成的对标记录数量
   const allBenchmarks = await db.benchmarks.toArray()
   const currentCompleted = allBenchmarks.filter(
-    bm => bm.status === "completed" || bm.status === "converted"
+    bm => bm.status === "disassembled" || bm.status === "converted"
   ).length
 
   // 2. 找到所有关联了对标模块的待办

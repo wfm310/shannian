@@ -39,7 +39,8 @@ export function ProductionForm({ open, onOpenChange, onCreated }: ProductionForm
   useEffect(() => {
     if (open) {
       getTopics("urgent").then(list => {
-        setTopics(list.filter(t => t.status === "pending_production"))
+        // 可选选题：已确认待生产（10 文档 confirmed）
+        setTopics(list.filter(t => t.status === "confirmed"))
       })
       const draft = loadDraft()
       if (draft) {

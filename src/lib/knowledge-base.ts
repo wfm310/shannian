@@ -367,7 +367,7 @@ export async function syncFromModules(): Promise<{
 
   // 发布记录 → 生产任务
   for (const pub of publishRecords) {
-    if (!pub.id) continue
+    if (!pub.id || !pub.productionId) continue // 即兴发布无关联生产任务
     const sourceKey = makeKey("produce-flow", pub.productionId)
     const targetKey = makeKey("publish", pub.id)
     const sourceNode = nodeKeyMapWithId.get(sourceKey)

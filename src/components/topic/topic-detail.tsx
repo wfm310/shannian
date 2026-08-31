@@ -93,7 +93,7 @@ export function TopicDetail({
   const competitionTag = topic.competition === "blue_ocean" ? "success"
     : topic.competition === "red_ocean" ? "danger" : "neutral"
 
-  const statusTag = topic.status === "published" ? "success" : "neutral"
+  const statusTag = topic.status === "produced" ? "success" : "neutral"
 
   const dotColor = topic.priorityLevel === "urgent" ? "bg-brand"
     : topic.priorityLevel === "scheduled" ? "bg-muted-foreground"
