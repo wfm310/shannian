@@ -8,6 +8,10 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* 设计令牌在 layout.tsx 中以独立 import 引入（见该文件注释），
+   不使用 @import —— Turbopack 会在 Tailwind 之后展开 @import，
+   导致 tokens.css 的 @theme 色阶失效。 */
+
 /* 限制 Tailwind 扫描范围到 src 目录，避免文档/配置中的方括号字面量（如
    安全区 padding 的方括号写法）被误识别为 utility class 并生成非法 CSS。
    注意：@source 只是「追加」扫描路径，默认仍会扫描项目根目录，因此必须
@@ -18,6 +22,117 @@
 
 
 @custom-variant dark (&:is(.dark *));
+
+/* =============================================================
+   设计令牌 · 色阶层
+   -------------------------------------------------------------
+   来源：Pixso 变量集合「闪念 Pro Tokens」（50 个唯一色值）
+   规则：这是色值的唯一事实来源，改色只改这一段
+   -------------------------------------------------------------
+   为什么写在这里而不是独立的 tokens.css：
+   1. Tailwind 只在含 @import "tailwindcss" 的入口文件里处理 @theme，
+      独立文件里的 @theme 不生效（已实测验证）
+   2. 用 @import 引入也不行：Turbopack 在 Tailwind 之后才展开 @import
+   3. 独立文件会被打包成单独的 CSS 文件，加载顺序不确定，
+      可能覆盖 globals.css 的语义值
+   -------------------------------------------------------------
+   注意：本文件在 src 目录内，会被 Tailwind 扫描提取 class 候选，
+   故注释中禁止书写带通配符的类名模式，否则会生成非法 CSS。
+   ============================================================= */
+@theme {
+  /* ========== 青绿 · 主色（13） ========== */
+  --color-mint-50: rgb(227 251 244);
+  --color-mint-100: rgb(194 245 230);
+  --color-mint-200: rgb(159 237 216);
+  --color-mint-300: rgb(111 233 203);
+  --color-mint-400: rgb(76 221 184);
+  --color-mint-500: rgb(45 212 168); /* 主色 */
+  --color-mint-600: rgb(23 180 140);
+  --color-mint-700: rgb(15 165 127);
+  --color-mint-800: rgb(14 140 109);
+  --color-mint-900: rgb(10 102 80);
+  --color-mint-950: rgb(7 77 59);
+  --color-mint-deep: rgb(14 42 34);
+  --color-mint-on: rgb(4 18 13); /* 青绿底上的文字色 */
+
+  /* ========== 紫 · 已转化态（10） ========== */
+  --color-purple-100: rgb(240 237 254);
+  --color-purple-200: rgb(226 219 253);
+  --color-purple-300: rgb(199 184 251);
+  --color-purple-400: rgb(169 150 249);
+  --color-purple-500: rgb(139 124 246); /* 主色 */
+  --color-purple-600: rgb(109 91 232);
+  --color-purple-700: rgb(87 68 204);
+  --color-purple-800: rgb(69 53 163);
+  --color-purple-900: rgb(54 41 126);
+  --color-purple-950: rgb(42 31 96);
+
+  /* ========== 黄 · 优先级 / 警示（2） ========== */
+  --color-amber-500: rgb(245 185 61); /* 主色 */
+  --color-amber-700: rgb(180 125 14);
+
+  /* ========== 红 · 必填 / 危险（2） ========== */
+  --color-red-500: rgb(244 86 78); /* 主色 */
+  --color-red-600: rgb(217 59 51);
+
+  /* ========== 蓝 · 信息（1） ========== */
+  --color-sky-500: rgb(56 189 248);
+
+  /* ========== 中性 · 暗底 → 浅字（22） ========== */
+  --color-neutral-950: rgb(12 15 20);
+  --color-neutral-900: rgb(21 26 34);
+  --color-neutral-850: rgb(23 32 42);
+  --color-neutral-800: rgb(26 33 43);
+  --color-neutral-775: rgb(27 34 45);
+  --color-neutral-700: rgb(35 43 56);
+  --color-neutral-600: rgb(46 57 73);
+  --color-neutral-550: rgb(55 68 79);
+  --color-neutral-500: rgb(78 93 110);
+  --color-neutral-450: rgb(86 98 116);
+  --color-neutral-400: rgb(102 120 138);
+  --color-neutral-350: rgb(126 140 160);
+  --color-neutral-300: rgb(138 150 165);
+  --color-neutral-250: rgb(154 168 184);
+  --color-neutral-200: rgb(203 213 223);
+  --color-neutral-150: rgb(226 232 238);
+  --color-neutral-100: rgb(237 242 248);
+  --color-neutral-90: rgb(241 244 248);
+  --color-neutral-80: rgb(243 246 248);
+  --color-neutral-70: rgb(245 248 250);
+  --color-neutral-60: rgb(248 250 252);
+  --color-neutral-50: rgb(255 255 255);
+}
+
+/* =============================================================
+   设计令牌 · 语义层（Pixso 暗色主题的目标值）
+   -------------------------------------------------------------
+   渐进式接入：本块位于下方「旧主题 :root」之前，
+   同名的语义变量（背景 / 卡片 / 主色等）会被后者覆盖，
+   因此现有页面配色不变，避免「暗底黑字」的可读性事故。
+   本块独有的变量（表面 / 文本层级 / 已转化色等）立即生效，供新组件使用。
+   UI 重写完成后，删除下方旧 :root / .dark 的 oklch 定义即可整体切换暗色。
+   ============================================================= */
+:root {
+  /* 表面 */
+  --background: rgb(12 15 20); /* 页面底 */
+  --surface: rgb(21 26 34); /* 卡片 */
+  --surface-raised: rgb(23 32 42); /* 弹窗 / 抽屉 */
+  --surface-sunken: rgb(26 33 43); /* 输入框 */
+  --surface-hover: rgb(35 43 56);
+
+  /* 文本 */
+  --text-body: rgb(226 232 238);
+  --text-label: rgb(203 213 223);
+  --text-secondary: rgb(138 150 165);
+  --text-muted: rgb(86 98 116);
+  --text-faint: rgb(78 93 110);
+
+  /* 状态色 */
+  --converted: rgb(139 124 246); /* 已转化（紫） */
+  --warning: rgb(245 185 61);
+  --danger: rgb(244 86 78);
+  --info: rgb(56 189 248);
+}
 
 @theme inline {
   --color-background: var(--background);

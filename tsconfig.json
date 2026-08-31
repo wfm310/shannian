@@ -48,7 +48,13 @@
     ".build-verify/types/**/*.ts",
     ".build-verify/dev/types/**/*.ts",
     ".build-v1/types/**/*.ts",
-    ".build-v1/dev/types/**/*.ts"
+    ".build-v1/dev/types/**/*.ts",
+    ".build-v2/types/**/*.ts",
+    ".build-v2/dev/types/**/*.ts",
+    ".build-v5/types/**/*.ts",
+    ".build-v5/dev/types/**/*.ts",
+    ".build-v6/types/**/*.ts",
+    ".build-v6/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

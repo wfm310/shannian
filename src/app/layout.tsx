@@ -1,5 +1,8 @@
 // ========== 导入区域 ==========
 import type { Metadata, Viewport } from "next"
+// 设计令牌（色阶 + 语义层）已合并进 globals.css 顶部的「设计令牌」区块。
+// 不可拆为独立文件，也不可用 @import 引入：Tailwind 只在含
+// @import "tailwindcss" 的入口文件里处理 @theme，独立文件会导致色阶失效。
 import "./globals.css"
 
 // 响应式布局（自动切换 PC 侧边栏 / 移动底部 Tab）
