@@ -99,14 +99,13 @@
   --radius-xl: 16px;
   --radius-full: 9999px;
 
-  /* ========== 间距（7） ========== */
-  --spacing-1: 4px;
-  --spacing-2: 8px;
-  --spacing-3: 12px;
-  --spacing-4: 16px;
-  --spacing-6: 24px;
-  --spacing-8: 32px;
-  --spacing-12: 48px;
+  /* ========== 间距 ==========
+     Pixso 的 7 个间距值（space/4 · /8 · /12 · /16 · /24 · /32 · /48）
+     正好是 4px 的 1/2/3/4/6/8/12 倍，故只需设置 Tailwind v4 的基础间距单位
+     --spacing: 4px，即可用 p-1 =4px / p-2 =8px / p-3 =12px / p-4 =16px
+     / p-6 =24px / p-8 =32px / p-12 =48px 完整覆盖，且不破坏默认 scale。
+     （曾按 space/N 逐个定义 --spacing-*，会与默认间距语义冲突，已改） */
+  --spacing: 4px;
 
   /* ========== 字号（10） ========== */
   --text-36: 36px;
@@ -157,9 +156,12 @@
   --warning: rgb(245 185 61); /* 优先级 / 警示 / 待办 */
   --danger: rgb(244 86 78); /* 必填星号 / 危险 */
 
-  /* 已转化态（紫，总纲规则 5） */
-  --converted: rgb(139 124 246);
-  --converted-light: rgb(169 150 249);
+  /* 已转化态（总纲规则 5）
+     Pixso 无独立语义变量，按 L3 第 42 行：紫 = violet/400 #8B7CF6，
+     浅紫 = violet/300 #A996F9。此处保留语义名以便业务代码引用，
+     但值来自色阶，改色只改色阶。 */
+  --converted: rgb(139 124 246); /* = violet/400 #8B7CF6 */
+  --converted-light: rgb(169 150 249); /* = violet/300 #A996F9 */
 
   /* 遮罩（未入 Pixso token，保留值） */
   --overlay: rgb(4 6 9 / 0.6);
